@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>二建备考 · 背题刷题</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#f5f5f5;--card:#fff;--primary:#2b6cb0;--primary-light:#ebf4ff;--success:#38a169;--danger:#e53e3e;--text:#1a202c;--muted:#718096;--border:#e2e8f0}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:80px}
+.header{background:var(--primary);color:#fff;padding:16px 16px 14px;position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,.15)}
+.header h1{font-size:18px;font-weight:600}
+.header .sub{font-size:12px;opacity:.8;margin-top:2px}
+.tabs{display:flex;background:#fff;border-bottom:1px solid var(--border);position:sticky;top:52px;z-index:99}
+.tab{flex:1;text-align:center;padding:10px 4px;font-size:13px;font-weight:500;color:var(--muted);border-bottom:3px solid transparent;cursor:pointer;transition:.2s}
+.tab.active{color:var(--primary);border-bottom-color:var(--primary)}
+.tab .badge{display:inline-block;background:var(--danger);color:#fff;font-size:10px;border-radius:10px;padding:1px 6px;margin-left:3px;vertical-align:top}
+.panel{display:none;padding:12px;max-width:640px;margin:0 auto}
+.panel.active{display:block}
+/* Stats */
+.stats-bar{display:flex;gap:8px;margin-bottom:12px}
+.stat-card{flex:1;background:var(--card);border-radius:10px;padding:10px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.stat-card .num{font-size:20px;font-weight:700;color:var(--primary)}
+.stat-card .label{font-size:11px;color:var(--muted);margin-top:2px}
+/* Mode toggle */
+.mode-toggle{display:flex;gap:8px;margin-bottom:12px}
+.mode-btn{flex:1;padding:8px;border:1px solid var(--border);border-radius:8px;background:var(--card);text-align:center;font-size:13px;cursor:pointer;transition:.2s}
+.mode-btn.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+/* Card */
+.card{background:var(--card);border-radius:12px;box-shadow:0 1px 4px rgba(0,0,0,.1);padding:20px;margin-bottom:12px;min-height:160px;display:flex;flex-direction:column;justify-content:center}
+.card .q{font-size:16px;line-height:1.7;font-weight:500}
+.card .a{font-size:15px;line-height:1.7;color:var(--text);display:none;margin-top:16px;padding-top:16px;border-top:1px dashed var(--border)}
+.card .a.show{display:block}
+.card .meta{font-size:12px;color:var(--muted);margin-bottom:8px;display:flex;justify-content:space-between}
+.card .tag{display:inline-block;font-size:10px;background:var(--primary-light);color:var(--primary);padding:2px 8px;border-radius:4px}
+/* Choices */
+.choices{margin-top:16px;display:flex;flex-direction:column;gap:8px}
+.choice{padding:12px 14px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;line-height:1.5;cursor:pointer;transition:.2s;background:#fff}
+.choice.selected{border-color:var(--primary);background:var(--primary-light)}
+.choice.correct{border-color:var(--success);background:#f0fff4;color:var(--success)}
+.choice.wrong{border-color:var(--danger);background:#fff5f5;color:var(--danger)}
+.choice.reveal-correct{border-color:var(--success);background:#f0fff4}
+.choice .prefix{font-weight:600;margin-right:6px}
+/* Buttons */
+.actions{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap}
+.btn{flex:1;min-width:80px;padding:10px 12px;border:none;border-radius:8px;font-size:14px;font-weight:500;cursor:pointer;transition:.2s;text-align:center;min-height:44px}
+.btn-primary{background:var(--primary);color:#fff}
+.btn-success{background:var(--success);color:#fff}
+.btn-danger{background:var(--danger);color:#fff}
+.btn-outline{background:#fff;border:1px solid var(--border);color:var(--text)}
+.btn-sm{padding:6px 10px;font-size:12px;min-height:auto}
+.btn:disabled{opacity:.4;pointer-events:none}
+/* Progress bar */
+.progress-wrap{height:6px;background:var(--border);border-radius:3px;margin:12px 0;overflow:hidden}
+.progress-fill{height:100%;background:var(--primary);border-radius:3px;transition:width .3s}
+.progress-text{font-size:12px;color:var(--muted);text-align:center}
+/* Section picker */
+.section-picker{display:flex;gap:6px;overflow-x:auto;padding:0 0 8px;margin-bottom:8px;-webkit-overflow-scrolling:touch}
+.section-picker .sec-btn{flex-shrink:0;padding:6px 14px;border:1px solid var(--border);border-radius:16px;font-size:12px;cursor:pointer;white-space:nowrap;background:#fff;transition:.2s}
+.section-picker .sec-btn.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+.section-picker .sec-btn .cnt{font-size:10px;opacity:.6;margin-left:3px}
+/* Empty state */
+.empty{text-align:center;padding:40px 20px;color:var(--muted)}
+.empty .icon{font-size:48px;margin-bottom:12px}
+.empty p{font-size:14px}
+/* Toast */
+.toast{position:fixed;bottom:100px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.8);color:#fff;padding:10px 20px;border-radius:8px;font-size:13px;z-index:999;display:none;animation:fadeIn .3s;max-width:90%}
+@keyframes fadeIn{from{opacity:0;transform:translateX(-50%) translateY(10px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+/* Scrollbar */
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-thumb{background:#cbd5e0;border-radius:2px}
+/* Night mode support */
+@media(prefers-color-scheme:dark){:root{--bg:#1a202c;--card:#2d3748;--text:#e2e8f0;--muted:#a0aec0;--border:#4a5568;--primary-light:#2a4365}.choice{background:#2d3748}}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>📚 二建备考</h1>
+  <div class="sub" id="dateDisplay"></div>
+  <div style="font-size:11px;opacity:.7;margin-top:1px" id="countdownDisplay"></div>
+</div>
+
+<div class="tabs">
+  <div class="tab active" data-tab="recite" onclick="switchTab('recite')">📖 背诵</div>
+  <div class="tab" data-tab="quiz" onclick="switchTab('quiz')">📝 刷题 <span class="badge" id="wrongBadge" style="display:none">0</span></div>
+  <div class="tab" data-tab="exam" onclick="switchTab('exam')">📄 真题</div>
+  <div class="tab" data-tab="progress" onclick="switchTab('progress')">📊 进度</div>
+</div>
+
+<!-- ===== 背诵面板 ===== -->
+<div class="panel active" id="panel-recite">
+  <div class="stats-bar" id="reciteStats"></div>
+  <div class="section-picker" id="reciteSections"></div>
+  <div class="card" id="reciteCard">
+    <div class="meta"><span class="tag" id="reciteTag">加载中</span><span id="reciteIdx">0/0</span></div>
+    <div class="q" id="reciteQ">加载题目中...</div>
+    <div class="a" id="reciteA"></div>
+  </div>
+  <div class="actions">
+    <button class="btn btn-outline" onclick="prevRecite()">← 上一张</button>
+    <button class="btn btn-primary" onclick="toggleAnswer()" id="showAnsBtn">👁 看答案</button>
+    <button class="btn btn-outline" onclick="nextRecite()">下一张 →</button>
+  </div>
+  <div class="actions" style="margin-top:8px">
+    <button class="btn btn-sm btn-outline" onclick="markRecite('hard')">😣 不熟</button>
+    <button class="btn btn-sm btn-outline" onclick="markRecite('ok')">🙂 还行</button>
+    <button class="btn btn-sm btn-success" onclick="markRecite('easy')">😎 记住了</button>
+  </div>
+  <div class="progress-wrap"><div class="progress-fill" id="reciteProgress" style="width:0%"></div></div>
+  <div class="progress-text" id="reciteProgressText">0%</div>
+</div>
+
+<!-- ===== 刷题面板（公共课错题） ===== -->
+<div class="panel" id="panel-quiz">
+  <div class="stats-bar" id="quizStats"></div>
+  <div class="section-picker" id="quizSections"></div>
+  <div class="card" id="quizCard">
+    <div class="meta"><span class="tag" id="quizTag">加载中</span><span id="quizIdx">0/0</span></div>
+    <div class="q" id="quizQ">加载中...</div>
+    <div class="choices" id="quizChoices"></div>
+  </div>
+  <div class="actions" id="quizActions">
+    <button class="btn btn-outline" onclick="prevQuiz()">← 上一题</button>
+    <button class="btn btn-primary" onclick="nextQuiz()">下一题 →</button>
+  </div>
+  <div class="progress-wrap"><div class="progress-fill" id="quizProgress" style="width:0%"></div></div>
+  <div class="progress-text" id="quizProgressText">0%</div>
+</div>
+
+<!-- ===== 真题面板 ===== -->
+<div class="panel" id="panel-exam">
+  <div class="stats-bar" id="examStats"></div>
+  <div class="section-picker" id="examSections"></div>
+  <div class="card" id="examCard">
+    <div class="meta"><span class="tag" id="examTag">加载中</span><span id="examIdx">0/0</span></div>
+    <div class="q" id="examQ">加载中...</div>
+    <div class="choices" id="examChoices"></div>
+  </div>
+  <div class="actions" id="examActions">
+    <button class="btn btn-outline" onclick="prevExam()">← 上一题</button>
+    <button class="btn btn-primary" onclick="nextExam()">下一题 →</button>
+  </div>
+  <div class="progress-wrap"><div class="progress-fill" id="examProgress" style="width:0%"></div></div>
+  <div class="progress-text" id="examProgressText">0%</div>
+</div>
+
+<!-- ===== 进度面板 ===== -->
+<div class="panel" id="panel-progress">
+  <div class="stats-bar" id="progressStats"></div>
+  <div id="progressDetail"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ===== DATA =====
+const DB_NAME = 'ejian_erjian_v1';
+// Inline fallback data (used when data.json can't be loaded)
+const INLINE_DATA = {"recite":[],"quiz":[],"exam":[]};
+
+let state = {
+  recite: { list: [], idx: 0, section: 'all', history: {} },
+  quiz:   { list: [], idx: 0, section: 'all', history: {} },
+  exam:   { list: [], idx: 0, section: 'all', history: {} },
+};
+let allData = { recite: [], quiz: [], exam: [] };
+
+// ===== STORAGE =====
+function saveState(){ try{ localStorage.setItem(DB_NAME, JSON.stringify(state.recite.history)+'|||'+JSON.stringify(state.quiz.history)+'|||'+JSON.stringify(state.exam.history)+'|||'+JSON.stringify({rIdx:state.recite.idx,rSec:state.recite.section,qIdx:state.quiz.idx,qSec:state.quiz.section,eIdx:state.exam.idx,eSec:state.exam.section})) }catch(e){} }
+function loadState(){
+  try{
+    const raw=localStorage.getItem(DB_NAME);
+    if(!raw) return;
+    const parts=raw.split('|||');
+    if(parts.length>=3){
+      state.recite.history=JSON.parse(parts[0]||'{}');
+      state.quiz.history=JSON.parse(parts[1]||'{}');
+      state.exam.history=JSON.parse(parts[2]||'{}');
+    }
+    if(parts.length>=4){
+      const p=JSON.parse(parts[3]||'{}');
+      if(p.rIdx!==undefined) state.recite.idx=p.rIdx;
+      if(p.rSec) state.recite.section=p.rSec;
+      if(p.qIdx!==undefined) state.quiz.idx=p.qIdx;
+      if(p.qSec) state.quiz.section=p.qSec;
+      if(p.eIdx!==undefined) state.exam.idx=p.eIdx;
+      if(p.eSec) state.exam.section=p.eSec;
+    }
+  }catch(e){}
+}
+
+function getHistory(type, id){
+  const h=state[type].history;
+  return h[id]||{status:'new',wrong:0,last:null};
+}
+function setHistory(type, id, data){
+  state[type].history[id]={...getHistory(type,id),...data};
+  saveState();
+}
+
+// ===== DATA LOADING =====
+async function loadData(){
+  // Load data from multiple small JSON files to avoid tunnel size limits
+  try{
+    const [quizData, examData, r1, r2] = await Promise.all([
+      fetch('quiz.json?'+Date.now()).then(r=>r.json()),
+      fetch('exam.json?'+Date.now()).then(r=>r.json()),
+      fetch('recite1.json?'+Date.now()).then(r=>r.json()),
+      fetch('recite2.json?'+Date.now()).then(r=>r.json()),
+    ]);
+    allData.recite = [...(r1||[]), ...(r2||[])];
+    allData.quiz = quizData||[];
+    allData.exam = examData||[];
+  }catch(e){
+    console.warn('Chunked load failed, trying single data.json:', e);
+    try{
+      const resp=await fetch('data.json?'+Date.now());
+      if(!resp.ok) throw new Error('HTTP '+resp.status);
+      const json=await resp.json();
+      allData.recite=json.recite||[];
+      allData.quiz=json.quiz||[];
+      allData.exam=json.exam||[];
+    }catch(e2){
+      // fallback: use inline data
+      allData.recite=INLINE_DATA.recite||[];
+      allData.quiz=INLINE_DATA.quiz||[];
+      allData.exam=INLINE_DATA.exam||[];
+    }
+  }
+  // init state lists
+  applySectionFilter('recite');
+  applySectionFilter('quiz');
+  applySectionFilter('exam');
+  renderAll();
+}
+
+function getSections(type){
+  const s=new Set();
+  (allData[type]||[]).forEach(d=>{if(d.sec) s.add(d.sec)});
+  return Array.from(s).sort();
+}
+
+function applySectionFilter(type){
+  const sec=state[type].section;
+  const all=allData[type]||[];
+  state[type].list=sec==='all'?all:all.filter(d=>d.sec===sec);
+  if(state[type].idx>=state[type].list.length) state[type].idx=0;
+}
+
+// ===== RENDER =====
+function renderAll(){
+  renderReciteSections(); renderRecite();
+  renderQuizSections(); renderQuiz();
+  renderExamSections(); renderExam();
+  renderProgress();
+  saveState();
+}
+
+// --- Recite ---
+function renderReciteSections(){
+  const el=document.getElementById('reciteSections');
+  const all=allData.recite||[];
+  const secs=['all',...getSections('recite')];
+  el.innerHTML=secs.map(s=>{
+    const cnt=s==='all'?all.length:(all.filter(d=>d.sec===s).length);
+    const act=state.recite.section===s?'active':'';
+    return `<div class="sec-btn ${act}" onclick="switchReciteSec('${s}')">${s==='all'?'全部':s} <span class="cnt">${cnt}</span></div>`;
+  }).join('');
+  updateReciteStats();
+}
+
+function renderRecite(){
+  const list=state.recite.list;
+  const idx=state.recite.idx;
+  if(!list.length){
+    document.getElementById('reciteCard').innerHTML='<div class="empty"><div class="icon">📭</div><p>该分类暂无内容</p></div>';
+    document.getElementById('reciteProgress').style.width='0%';
+    document.getElementById('reciteProgressText').textContent='0%';
+    return;
+  }
+  const item=list[idx];
+  const h=getHistory('recite',item.id);
+  const total=list.length;
+  const done=Object.values(state.recite.history).filter(h=>h.status==='easy').length;
+  document.getElementById('reciteTag').textContent=(item.sec||'实务')+(item.sub?' · '+item.sub:'');
+  document.getElementById('reciteIdx').textContent=`${idx+1}/${total}`;
+  document.getElementById('reciteQ').textContent=item.q;
+  document.getElementById('reciteA').textContent=item.a;
+  document.getElementById('reciteA').classList.remove('show');
+  document.getElementById('showAnsBtn').textContent='👁 看答案';
+  document.getElementById('reciteProgress').style.width=(total?((idx+1)/total*100):0)+'%';
+  document.getElementById('reciteProgressText').textContent=`第 ${idx+1}/${total} 题 · 已记 ${done}`;
+}
+
+function updateReciteStats(){
+  const all=state.recite.list.length;
+  const done=Object.values(state.recite.history).filter(h=>h.status==='easy').length;
+  const ing=Object.values(state.recite.history).filter(h=>h.status==='ok'||h.status==='hard').length;
+  document.getElementById('reciteStats').innerHTML=
+    `<div class="stat-card"><div class="num">${all}</div><div class="label">总题</div></div>
+     <div class="stat-card"><div class="num">${done}</div><div class="label">已记</div></div>
+     <div class="stat-card"><div class="num">${all-done}</div><div class="label">待背</div></div>`;
+}
+
+function toggleAnswer(){
+  const el=document.getElementById('reciteA');
+  el.classList.toggle('show');
+  document.getElementById('showAnsBtn').textContent=el.classList.contains('show')?'🙈 隐藏答案':'👁 看答案';
+}
+
+function prevRecite(){if(state.recite.idx>0){state.recite.idx--;renderRecite();saveState()}}
+function nextRecite(){if(state.recite.idx<state.recite.list.length-1){state.recite.idx++;renderRecite();saveState()}else{showToast('🎉 已是最后一张')}}
+
+function markRecite(status){
+  const item=state.recite.list[state.recite.idx];
+  if(!item) return;
+  const labels={hard:'不熟',ok:'还行',easy:'记住了'};
+  setHistory('recite',item.id,{status,last:Date.now()});
+  showToast(`已标记「${labels[status]}」`);
+  updateReciteStats();
+  renderRecite();
+  // auto advance if "记住了"
+  if(status==='easy') setTimeout(nextRecite,300);
+}
+
+function switchReciteSec(sec){
+  state.recite.section=sec;
+  state.recite.idx=0;
+  applySectionFilter('recite');
+  renderReciteSections();
+  renderRecite();
+  saveState();
+}
+
+// --- Quiz ---
+function renderQuizSections(){
+  const el=document.getElementById('quizSections');
+  const all=allData.quiz||[];
+  const secs=['all',...getSections('quiz')];
+  el.innerHTML=secs.map(s=>{
+    const cnt=s==='all'?all.length:(all.filter(d=>d.sec===s).length);
+    const act=state.quiz.section===s?'active':'';
+    return `<div class="sec-btn ${act}" onclick="switchQuizSec('${s}')">${s==='all'?'全部':s} <span class="cnt">${cnt}</span></div>`;
+  }).join('');
+  updateQuizStats();
+}
+
+function renderQuiz(){
+  const list=state.quiz.list;
+  const idx=state.quiz.idx;
+  if(!list.length){
+    document.getElementById('quizCard').innerHTML='<div class="empty"><div class="icon">📭</div><p>该分类暂无内容</p></div>';
+    return;
+  }
+  const item=list[idx];
+  const h=getHistory('quiz',item.id);
+  const total=list.length;
+  const isMulti = Array.isArray(item.answer);
+  document.getElementById('quizTag').textContent=(item.sec||'公共课')+(isMulti?' · 多选题':'');
+  document.getElementById('quizIdx').textContent=`${idx+1}/${total}`;
+  document.getElementById('quizQ').textContent=item.q;
+
+  const choicesEl=document.getElementById('quizChoices');
+  if(!item.choices||!item.choices.length){
+    choicesEl.innerHTML='<div style="color:var(--muted);font-size:14px;text-align:center;padding:10px">无选项（主观题）</div>';
+  }else{
+    const clickHandler = isMulti ? 'toggleMultiChoice' : 'pickQuizChoice';
+    choicesEl.innerHTML=item.choices.map((c,i)=>{
+      const letters='ABCDEFGHIJ'[i];
+      return `<div class="choice" data-idx="${i}" onclick="${clickHandler}(this,${i},'quiz')"><span class="prefix">${letters}.</span>${c}</div>`;
+    }).join('');
+    if(isMulti){
+      // Add submit button for multi-select
+      choicesEl.innerHTML += `<div style="margin-top:12px"><button class="btn btn-primary" onclick="submitMultiChoice('quiz')" style="width:100%">✓ 提交答案</button></div>`;
+    }
+  }
+  document.getElementById('quizActions').innerHTML=
+    `<button class="btn btn-outline" onclick="prevQuiz()">← 上一题</button>
+     <button class="btn btn-primary" onclick="nextQuiz()">下一题 →</button>`;
+  document.getElementById('quizProgress').style.width=(total?((idx+1)/total*100):0)+'%';
+  document.getElementById('quizProgressText').textContent=`第 ${idx+1}/${total} 题 · 已答 ${Object.keys(state.quiz.history).length}`;
+}
+
+function updateQuizStats(){
+  const all=state.quiz.list.length;
+  const done=Object.keys(state.quiz.history).length;
+  const wrong=Object.values(state.quiz.history).filter(h=>h.wrong>0).length;
+  document.getElementById('quizStats').innerHTML=
+    `<div class="stat-card"><div class="num">${all}</div><div class="label">总题</div></div>
+     <div class="stat-card"><div class="num">${done}</div><div class="label">已答</div></div>
+     <div class="stat-card"><div class="num" style="color:var(--danger)">${wrong}</div><div class="label">错题</div></div>`;
+  const badge=document.getElementById('wrongBadge');
+  if(wrong>0){badge.textContent=wrong;badge.style.display='inline-block'}else{badge.style.display='none'}
+}
+
+// --- Multi-select support ---
+// Store temporary selections for multi-select questions
+const _multiSel = {quiz: new Set(), exam: new Set()};
+
+function toggleMultiChoice(el, idx, mode){
+  el.classList.toggle('selected');
+  const s = _multiSel[mode];
+  if(s.has(idx)) s.delete(idx); else s.add(idx);
+}
+
+function submitMultiChoice(mode){
+  const list = state[mode].list;
+  const item = list[state[mode].idx];
+  if(!item || !Array.isArray(item.answer)) return;
+  
+  const correct = item.answer; // array like [0,2]
+  const selected = Array.from(_multiSel[mode]).sort();
+  const parent = document.querySelector('#'+mode+'Choices');
+  if(!parent) return;
+  const allChoices = parent.querySelectorAll('.choice');
+  
+  // Disable all
+  allChoices.forEach(c=>c.style.pointerEvents='none');
+  
+  // Show correct answers
+  allChoices.forEach((c,i)=>{
+    if(correct.includes(i)) c.classList.add('reveal-correct');
+    if(selected.includes(i) && !correct.includes(i)) c.classList.add('wrong');
+  });
+  
+  const isCorrect = selected.length === correct.length && selected.every(v=>correct.includes(v));
+  setHistory(mode, item.id, {wrong: getHistory(mode,item.id).wrong+(isCorrect?0:1), last:Date.now()});
+  
+  if(mode==='quiz') updateQuizStats(); else updateExamStats();
+  
+  const btn = document.querySelector('#submitMultiBtn_'+mode);
+  if(btn) btn.style.display='none';
+  
+  document.getElementById(mode+'Actions').innerHTML=
+    `<button class="btn btn-outline" onclick="prev${mode==='quiz'?'Quiz':'Exam'}()">← 上一题</button>
+     <button class="btn ${isCorrect?'btn-success':'btn-danger'}" onclick="next${mode==='quiz'?'Quiz':'Exam'}()">${isCorrect?'✓ 正确 (全对)':'✗ 有误'} →</button>`;
+  
+  showToast(isCorrect ? '✓ 多选题全对！' : '✗ 有选项选错了，绿色为正确答案');
+}
+
+function pickQuizChoice(el, idx, mode){
+  if(mode==='multi') return; // handled by toggleMultiChoice
+  const item=state.quiz.list[state.quiz.idx];
+  if(!item||!item.choices) return;
+  const parent=el.parentElement;
+  const allChoices=parent.querySelectorAll('.choice:not([style*="display"])');
+  const correct = item.answer;
+  
+  // disable all
+  allChoices.forEach(c=>{c.style.pointerEvents='none'});
+  // mark chosen
+  allChoices.forEach(c=>c.classList.remove('selected'));
+  el.classList.add('selected');
+
+  const isCorrect = (idx===correct);
+  allChoices.forEach((c,i)=>{
+    if(i===correct) c.classList.add('reveal-correct');
+    if(i===idx && !isCorrect) c.classList.add('wrong');
+  });
+
+  setHistory('quiz',item.id,{wrong: getHistory('quiz',item.id).wrong+(isCorrect?0:1), last:Date.now()});
+  updateQuizStats();
+
+  document.getElementById('quizActions').innerHTML=
+    `<button class="btn btn-outline" onclick="prevQuiz()">← 上一题</button>
+     <button class="btn ${isCorrect?'btn-success':'btn-danger'}" onclick="nextQuiz()">${isCorrect?'✓ 正确':'✗ 看解析'} →</button>`;
+
+  if(isCorrect) showToast('✓ 答对了！');
+}
+
+function prevQuiz(){if(state.quiz.idx>0){state.quiz.idx--;renderQuiz();saveState()}}
+function nextQuiz(){if(state.quiz.idx<state.quiz.list.length-1){state.quiz.idx++;renderQuiz();saveState()}else{showToast('🎉 全部做完！可切换到「真题」继续')}}
+
+function switchQuizSec(sec){
+  state.quiz.section=sec;
+  state.quiz.idx=0;
+  applySectionFilter('quiz');
+  renderQuizSections();
+  renderQuiz();
+  saveState();
+}
+
+// --- Exam ---
+function renderExamSections(){
+  const el=document.getElementById('examSections');
+  const all=allData.exam||[];
+  const secs=['all',...getSections('exam')];
+  el.innerHTML=secs.map(s=>{
+    const cnt=s==='all'?all.length:(all.filter(d=>d.sec===s).length);
+    const act=state.exam.section===s?'active':'';
+    return `<div class="sec-btn ${act}" onclick="switchExamSec('${s}')">${s==='all'?'全部':s} <span class="cnt">${cnt}</span></div>`;
+  }).join('');
+  updateExamStats();
+}
+
+function renderExam(){
+  const list=state.exam.list;
+  const idx=state.exam.idx;
+  if(!list.length){
+    document.getElementById('examCard').innerHTML='<div class="empty"><div class="icon">📭</div><p>暂无真题数据，请上传材料后刷新</p></div>';
+    return;
+  }
+  const item=list[idx];
+  const h=getHistory('exam',item.id);
+  const total=list.length;
+  const isMulti = Array.isArray(item.answer);
+  document.getElementById('examTag').textContent=(item.sec||'真题')+(isMulti?' · 多选题':'');
+  document.getElementById('examIdx').textContent=`${idx+1}/${total}`;
+  document.getElementById('examQ').textContent=item.q;
+
+  const choicesEl=document.getElementById('examChoices');
+  if(!item.choices||!item.choices.length){
+    choicesEl.innerHTML='';
+  }else{
+    const clickHandler = isMulti ? 'toggleMultiChoice' : 'pickExamChoice';
+    choicesEl.innerHTML=item.choices.map((c,i)=>{
+      const letters='ABCDEFGHIJ'[i];
+      return `<div class="choice" data-idx="${i}" onclick="${clickHandler}(this,${i},'exam')"><span class="prefix">${letters}.</span>${c}</div>`;
+    }).join('');
+    if(isMulti){
+      choicesEl.innerHTML += `<div style="margin-top:12px"><button class="btn btn-primary" onclick="submitMultiChoice('exam')" style="width:100%">✓ 提交答案</button></div>`;
+    }
+  }
+  document.getElementById('examActions').innerHTML=
+    `<button class="btn btn-outline" onclick="prevExam()">← 上一题</button>
+     <button class="btn btn-primary" onclick="nextExam()">下一题 →</button>`;
+  document.getElementById('examProgress').style.width=(total?((idx+1)/total*100):0)+'%';
+  document.getElementById('examProgressText').textContent=`第 ${idx+1}/${total} 题 · 已答 ${Object.keys(state.exam.history).length}`;
+}
+
+function updateExamStats(){
+  const all=state.exam.list.length;
+  const done=Object.keys(state.exam.history).length;
+  const wrong=Object.values(state.exam.history).filter(h=>h.wrong>0).length;
+  document.getElementById('examStats').innerHTML=
+    `<div class="stat-card"><div class="num">${all}</div><div class="label">总题</div></div>
+     <div class="stat-card"><div class="num">${done}</div><div class="label">已答</div></div>
+     <div class="stat-card"><div class="num" style="color:var(--danger)">${wrong}</div><div class="label">错题</div></div>`;
+}
+
+function pickExamChoice(el, idx, mode){
+  if(mode==='multi') return;
+  const item=state.exam.list[state.exam.idx];
+  if(!item||!item.choices) return;
+  const parent=el.parentElement;
+  const allChoices=parent.querySelectorAll('.choice:not([style*="display"])');
+  const correct = item.answer;
+
+  allChoices.forEach(c=>{c.style.pointerEvents='none'});
+  allChoices.forEach(c=>c.classList.remove('selected'));
+  el.classList.add('selected');
+
+  const isCorrect = (idx===correct);
+  allChoices.forEach((c,i)=>{
+    if(i===correct) c.classList.add('reveal-correct');
+    if(i===idx && !isCorrect) c.classList.add('wrong');
+  });
+
+  setHistory('exam',item.id,{wrong: getHistory('exam',item.id).wrong+(isCorrect?0:1), last:Date.now()});
+  updateExamStats();
+
+  document.getElementById('examActions').innerHTML=
+    `<button class="btn btn-outline" onclick="prevExam()">← 上一题</button>
+     <button class="btn ${isCorrect?'btn-success':'btn-danger'}" onclick="nextExam()">${isCorrect?'✓ 正确':'✗ 错了'} →</button>`;
+  if(isCorrect) showToast('✓ 正确！');
+}
+
+function prevExam(){if(state.exam.idx>0){state.exam.idx--;renderExam();saveState()}}
+function nextExam(){if(state.exam.idx<state.exam.list.length-1){state.exam.idx++;renderExam();saveState()}else{showToast('🎉 真题全部完成！')}}
+
+function switchExamSec(sec){
+  state.exam.section=sec;
+  state.exam.idx=0;
+  applySectionFilter('exam');
+  renderExamSections();
+  renderExam();
+  saveState();
+}
+
+// --- Progress ---
+function renderProgress(){
+  // Overall stats
+  const rTotal=allData.recite.length||0;
+  const qTotal=allData.quiz.length||0;
+  const eTotal=allData.exam.length||0;
+  const rDone=Object.values(state.recite.history).filter(h=>h.status==='easy').length;
+  const qDone=Object.keys(state.quiz.history).length;
+  const eDone=Object.keys(state.exam.history).length;
+  const qWrong=Object.values(state.quiz.history).filter(h=>h.wrong>0).length;
+  const eWrong=Object.values(state.exam.history).filter(h=>h.wrong>0).length;
+
+  document.getElementById('progressStats').innerHTML=
+    `<div class="stat-card"><div class="num">${rDone}/${rTotal}</div><div class="label">背诵</div></div>
+     <div class="stat-card"><div class="num">${qDone}/${qTotal}</div><div class="label">练习题</div></div>
+     <div class="stat-card"><div class="num">${eDone}/${eTotal}</div><div class="label">真题</div></div>`;
+
+  // Detail by section
+  let html='<div style="background:var(--card);border-radius:12px;padding:16px;box-shadow:0 1px 3px rgba(0,0,0,.08)">';
+  html+='<h3 style="font-size:15px;margin-bottom:12px">📋 各模块详情</h3>';
+  
+  ['recite','quiz','exam'].forEach(type=>{
+    const label={recite:'背诵',quiz:'练习题',exam:'真题'}[type];
+    const data=allData[type]||[];
+    const secs=getSections(type);
+    if(secs.length){
+      secs.forEach(sec=>{
+        const items=data.filter(d=>d.sec===sec);
+        const total=items.length;
+        let done=0, wrong=0;
+        if(type==='recite'){
+          done=items.filter(d=>getHistory(type,d.id).status==='easy').length;
+        }else{
+          done=items.filter(d=>getHistory(type,d.id).last).length;
+          wrong=items.filter(d=>(getHistory(type,d.id).wrong||0)>0).length;
+        }
+        const pct=total?Math.round(done/total*100):0;
+        html+=`<div style="margin-bottom:8px">
+          <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:3px">
+            <span style="font-weight:500">${label} · ${sec}</span>
+            <span>${done}/${total} ${wrong?`<span style="color:var(--danger)">错${wrong}</span>`:''}</span>
+          </div>
+          <div style="height:6px;background:var(--border);border-radius:3px;overflow:hidden">
+            <div style="height:100%;width:${pct}%;background:${pct<50?'var(--danger)':pct<80?'#d69e2e':'var(--success)'};border-radius:3px;transition:width .3s"></div>
+          </div>
+        </div>`;
+      });
+    }else{
+      const total=data.length;
+      let done=0, wrong=0;
+      if(type==='recite'){
+        done=data.filter(d=>getHistory(type,d.id).status==='easy').length;
+      }else{
+        done=data.filter(d=>getHistory(type,d.id).last).length;
+        wrong=data.filter(d=>(getHistory(type,d.id).wrong||0)>0).length;
+      }
+      const pct=total?Math.round(done/total*100):0;
+      html+=`<div style="margin-bottom:8px">
+        <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:3px">
+          <span style="font-weight:500">${label}</span>
+          <span>${done}/${total} ${wrong?`<span style="color:var(--danger)">错${wrong}</span>`:''}</span>
+        </div>
+        <div style="height:6px;background:var(--border);border-radius:3px;overflow:hidden">
+          <div style="height:100%;width:${pct}%;background:${pct<50?'var(--danger)':pct<80?'#d69e2e':'var(--success)'};border-radius:3px"></div>
+        </div>
+      </div>`;
+    }
+  });
+
+  // wrong review button
+  html+=`<button class="btn btn-outline" style="margin-top:12px;width:100%" onclick="reviewWrong()">🔁 复习错题</button>`;
+  html+='</div>';
+  document.getElementById('progressDetail').innerHTML=html;
+}
+
+function reviewWrong(){
+  // Collect all wrong quiz and exam questions
+  const wrong=[];
+  ['quiz','exam'].forEach(type=>{
+    (allData[type]||[]).forEach(d=>{
+      const h=getHistory(type,d.id);
+      if((h.wrong||0)>0) wrong.push({...d,from:type});
+    });
+  });
+  if(!wrong.length){showToast('🎉 没有错题！');return}
+  // Switch to quiz tab and load wrong questions as a temporary set
+  // We'll just navigate to first wrong one
+  showToast(`有 ${wrong.length} 道错题待复习`);
+  // Navigate to the relevant tab
+  const first=wrong[0];
+  if(first.from==='exam'){
+    switchTab('exam');
+    // Find its index
+    const idx=state.exam.list.findIndex(d=>d.id===first.id);
+    if(idx>=0){state.exam.idx=idx;renderExam()}
+  }else{
+    switchTab('quiz');
+    const idx=state.quiz.list.findIndex(d=>d.id===first.id);
+    if(idx>=0){state.quiz.idx=idx;renderQuiz()}
+  }
+}
+
+// ===== TAB SWITCH =====
+function switchTab(name){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelector(`.tab[data-tab="${name}"]`).classList.add('active');
+  document.getElementById(`panel-${name}`).classList.add('active');
+}
+
+// ===== TOAST =====
+let toastTimer;
+function showToast(msg){
+  const el=document.getElementById('toast');
+  el.textContent=msg;
+  el.style.display='block';
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>{el.style.display='none'},2000);
+}
+
+// ===== DATE =====
+function updateDate(){
+  const d=new Date();
+  const opts={year:'numeric',month:'long',day:'numeric',weekday:'long'};
+  document.getElementById('dateDisplay').textContent='截止 2026.08.07 · '+d.toLocaleDateString('zh-CN',opts);
+  // Countdown
+  const deadline = new Date(2026,7,7); // month is 0-indexed
+  const diff = deadline - d;
+  const days = Math.ceil(diff/(1000*60*60*24));
+  const hours = Math.floor((diff%(1000*60*60*24))/(1000*60*60));
+  document.getElementById('countdownDisplay').textContent = 
+    days > 0 ? `⏳ 还剩 ${days}天${hours}小时` : '📌 已到截止日期';
+}
+
+// ===== INIT =====
+document.addEventListener('DOMContentLoaded',()=>{
+  updateDate();
+  loadState();
+  loadData();
+});
+</script>
+</body>
+</html>
