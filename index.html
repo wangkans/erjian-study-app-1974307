@@ -820,7 +820,7 @@ document.addEventListener('touchmove', function(e){
 }, {passive:true});
 
 
-function init(){
+window.init = function(){
   try{
     var d = new Date();
     $('subDate').textContent = '截止 2026.08.07 · ' + d.toLocaleDateString('zh-CN');
