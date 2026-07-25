@@ -267,23 +267,42 @@ body.dark .daily-plan .big-num{color:#94a3b8}
 <div class="panel" id="panel-case">
   <div class="stats-bar" id="caseStats"></div>
   <div class="sec-row" id="caseSec"></div>
+
+  <!-- 步骤1: 阅读+作答 -->
   <div class="card" id="caseCard">
     <div class="meta"><span class="tag" id="caseTag">-</span><span id="caseIdx">0/0</span></div>
-    <div style="font-size:12px;color:#94a3b8;margin-bottom:4px">📋 案例背景</div>
+    <div style="font-size:12px;color:#94a3b8;margin-bottom:4px">📋 背景资料</div>
     <div style="font-size:13px;line-height:1.6;color:#475569;margin-bottom:12px;white-space:pre-wrap" id="caseScenario">-</div>
     <div style="font-size:12px;color:#94a3b8;margin-bottom:6px">📝 问题</div>
     <div style="font-size:13px;line-height:1.6;font-weight:500;margin-bottom:12px;white-space:pre-wrap" id="caseQuestion">-</div>
-    <div style="font-size:12px;color:#94a3b8;margin-bottom:6px">✅ 请勾选你答对的得分点：</div>
-    <div id="casePoints"></div>
+
+    <!-- 作答区 -->
+    <div id="caseAnswerArea">
+      <div style="font-size:12px;color:#94a3b8;margin-bottom:6px">✍️ 请在此写出你的答案</div>
+      <textarea id="caseAnswerInput" style="width:100%;min-height:120px;border:1px solid #e2e8f0;border-radius:8px;padding:10px;font-size:13px;line-height:1.6;resize:vertical;font-family:inherit" placeholder="逐条写下你的回答（可用序号列点）..."></textarea>
+    </div>
+
+    <!-- 提交后显示的评分区（默认隐藏） -->
+    <div id="caseScoreArea" style="display:none">
+      <div style="border-top:2px solid #e2e8f0;padding-top:12px;margin-top:12px">
+        <div style="font-size:12px;color:#94a3b8;margin-bottom:8px">✅ 对照参考答案，勾选你答对的得分点：</div>
+        <div id="casePoints"></div>
+        <div id="caseLiveScore" style="text-align:center;margin-top:10px;font-size:14px;font-weight:700;color:#d97706"></div>
+      </div>
+    </div>
   </div>
+
   <div class="actions">
     <button class="btn btn-outline" onclick="goCase(-1)">←</button>
-    <button class="btn btn-primary" onclick="scoreCase()" style="flex:2">✍️ 提交评分</button>
+    <button class="btn btn-primary" onclick="submitCase()" id="caseSubmitBtn" style="flex:2">📤 提交答案</button>
+    <button class="btn btn-outline" id="caseNextBtn" style="display:none;flex:2" onclick="nextCaseAfterScore()">下一题 →</button>
     <button class="btn btn-outline" onclick="goCase(1)">→</button>
   </div>
+
   <div id="caseResult" style="margin-top:8px"></div>
   <div class="progress-bar"><div class="progress-fill" id="caseBar" style="width:0%"></div></div>
 </div>
+
 <div class="panel" id="panel-progress">
   <div class="stats-bar" id="progressStats"></div>
   <div style="background:#fff;border-radius:10px;border:1px solid #e2e8f0;padding:12px;margin-bottom:8px" id="achievementBoard">
@@ -1246,34 +1265,7 @@ window.goCase = function(d){
   saveState();
   renderTab('case');
 };
-window.scoreCase = function(){
-  var list = DATA.case||[];
-  var item = list[state.cs||0];
-  if(!item) return;
-  var checks = document.querySelectorAll('#casePoints input:checked');
-  var got = 0;
-  for(var i=0;i<checks.length;i++){
-    if(checks[i].value === '1') got++;
-  }
-  var total = item.points.length;
-  var pct = Math.round(got/total*100);
-  var grade = pct>=80?'优秀':(pct>=60?'及格':'需加强');
-  var color = pct>=80?'#059669':(pct>=60?'#d97706':'#dc2626');
-  var el = document.getElementById('caseResult');
-  el.innerHTML = '<div style="background:#fff;border-radius:8px;border:1px solid #e2e8f0;padding:12px;text-align:center">'+
-    '<div style="font-size:28px;font-weight:800;color:'+color+'">'+got+'/'+total+'</div>'+
-    '<div style="font-size:13px;color:'+color+';font-weight:600">'+grade+' ('+pct+'%)</div>'+
-    '<div style="font-size:11px;color:#94a3b8;margin-top:4px">正确答案已勾出</div></div>';
-  // 显示正确答案
-  var allChecks = document.querySelectorAll('#casePoints input');
-  for(var i=0;i<allChecks.length;i++){
-    allChecks[i].disabled = true;
-    if(allChecks[i].value === '1') allChecks[i].parentElement.style.color = '#059669';
-  }
-  setH('ch', item.id, {score:got, total:total, last:Date.now()});
-  saveState();
-  updateDailyPlan();
-};
+// scoreCase removed
 
 // 强化每日计划
 var _upd = updateDailyPlan;
@@ -1554,30 +1546,75 @@ function renderCase(){
   document.getElementById('caseIdx').textContent = (state.cs+1)+'/'+list.length;
   document.getElementById('caseScenario').textContent = item.scenario;
   document.getElementById('caseQuestion').textContent = item.question;
-  // 随机排列得分点(含干扰项)
-  var pts = item.points.map(function(p){return {text:p,correct:true};});
-  // 加2-3个干扰项
-  var decoys = ['桩基施工前需做静载试验','混凝土配合比报告由施工单位自行确定','围堰高度只需大于常水位','闸门安装后再浇筑底板'];
-  for(var i=0;i<Math.min(3,decoys.length);i++){
-    if(item.points.indexOf(decoys[i])<0) pts.push({text:decoys[i],correct:false});
-  }
-  // shuffle
-  for(var i=pts.length-1;i>0;i--){
-    var j=Math.floor(Math.random()*(i+1));
-    var t=pts[i];pts[i]=pts[j];pts[j]=t;
-  }
-  var html = '';
-  for(var i=0;i<pts.length;i++){
-    html += '<label style="display:flex;align-items:flex-start;gap:6px;padding:6px 0;font-size:12px;cursor:pointer">'+
-      '<input type="checkbox" value="'+(pts[i].correct?'1':'0')+'" style="margin-top:2px;flex-shrink:0" onchange="clearCaseResult()">'+
-      '<span style="color:#475569">'+pts[i].text+'</span></label>';
-  }
-  document.getElementById('casePoints').innerHTML = html;
+  // 重置作答区
+  document.getElementById('caseAnswerArea').style.display = 'block';
+  document.getElementById('caseScoreArea').style.display = 'none';
+  document.getElementById('caseAnswerInput').value = '';
+  document.getElementById('caseAnswerInput').disabled = false;
+  document.getElementById('caseSubmitBtn').style.display = '';
+  document.getElementById('caseNextBtn').style.display = 'none';
   document.getElementById('caseResult').innerHTML = '';
   document.getElementById('caseBar').style.width = ((state.cs+1)/list.length*100)+'%';
 }
-window.clearCaseResult = function(){
-  document.getElementById('caseResult').innerHTML = '';
+
+// 提交答案→显示得分点
+window.submitCase = function(){
+  var ta = document.getElementById('caseAnswerInput');
+  ta.disabled = true;
+  document.getElementById('caseAnswerArea').style.display = 'none';
+  document.getElementById('caseSubmitBtn').style.display = 'none';
+  document.getElementById('caseNextBtn').style.display = '';
+  
+  // 生成得分点
+  var item = DATA.case[state.cs||0];
+  var pts = item.points.map(function(p){return {text:p,correct:true};});
+  // 加干扰项
+  var decoys = ['桩基施工前需做静载试验','混凝土配合比由施工单位确定','围堰高度大于常水位即可','闸门安装后再浇筑底板'];
+  for(var i=0;i<Math.min(3,decoys.length);i++){
+    if(item.points.indexOf(decoys[i])<0) pts.push({text:decoys[i],correct:false});
+  }
+  for(var i=pts.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=pts[i];pts[i]=pts[j];pts[j]=t;}
+  
+  var html = '';
+  for(var i=0;i<pts.length;i++){
+    html += '<label style="display:flex;align-items:flex-start;gap:6px;padding:6px 0;font-size:12px;cursor:pointer">'+
+      '<input type="checkbox" value="'+(pts[i].correct?'1':'0')+'" style="margin-top:2px;flex-shrink:0" onchange="updateCaseScore()">'+
+      '<span style="color:#475569">'+pts[i].text+'</span></label>';
+  }
+  document.getElementById('casePoints').innerHTML = html;
+  document.getElementById('caseScoreArea').style.display = 'block';
+  document.getElementById('caseLiveScore').textContent = '得分: 0/'+item.points.length;
+  
+  // 滚动到评分区
+  document.getElementById('caseScoreArea').scrollIntoView({behavior:'smooth'});
+};
+
+// 实时更新得分
+window.updateCaseScore = function(){
+  var item = DATA.case[state.cs||0];
+  var checks = document.querySelectorAll('#casePoints input:checked');
+  var got = 0;
+  for(var i=0;i<checks.length;i++){if(checks[i].value==='1') got++;}
+  var total = item.points.length;
+  var pct = Math.round(got/total*100);
+  var color = pct>=80?'#059669':(pct>=60?'#d97706':'#dc2626');
+  document.getElementById('caseLiveScore').innerHTML = 
+    '<span style="font-size:24px;font-weight:800;color:'+color+'">'+got+'/'+total+'</span>'+
+    '<span style="color:'+color+';margin-left:8px">'+ (pct>=80?'优秀':(pct>=60?'及格':'需加强')) +'</span>';
+  
+  // 保存
+  setH('ch', item.id, {score:got, total:total, last:Date.now()});
+  saveState();
+  updateDailyPlan();
+};
+
+// 下一题
+window.nextCaseAfterScore = function(){
+  var list = DATA.case||[];
+  state.cs = (state.cs||0) + 1;
+  if(state.cs >= list.length) state.cs = 0;
+  saveState();
+  renderCase();
 };
 
 // ===== 章节薄弱度热力图 =====
