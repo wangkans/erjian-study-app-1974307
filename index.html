@@ -147,9 +147,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;b
 <div class="toast" id="toast"></div>
 
 <script>
+window.DATA = {"recite":[],"quiz":[],"exam":[]};
+</script>
+
+<script>
 (function(){
 'use strict';
-// 数据：直接读取内联数据
+// 数据：直接读取内联数据(由前一个<script>注入)
 var DATA = window.DATA || {recite:[],quiz:[],exam:[]};
 var db = 'ejian_v3';
 var state = {r:0,rs:'all',rh:{},q:0,qs:'all',qh:{},e:0,es:'all',eh:{}};
