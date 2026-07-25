@@ -124,6 +124,7 @@ body.dark .daily-plan .big-num{color:#94a3b8}
   <div class="tab" data-tab="recite" onclick="goTab('recite')"><span class="em">📖</span>背诵</div>
   <div class="tab" data-tab="quiz" onclick="goTab('quiz')"><span class="em">📝</span>刷题</div>
   <div class="tab" data-tab="exam" onclick="goTab('exam')"><span class="em">📄</span>真题</div>
+  <div class="tab" data-tab="exam_sim" onclick="goTab('exam_sim')"><span class="em">🎯</span>模考</div>
   <div class="tab" data-tab="case" onclick="goTab('case')"><span class="em">📋</span>案例</div>
   <div class="tab" data-tab="progress" onclick="goTab('progress')"><span class="em">📊</span>进度</div>
 </div>
@@ -264,6 +265,39 @@ body.dark .daily-plan .big-num{color:#94a3b8}
   <div class="progress-bar"><div class="progress-fill" id="examBar" style="width:0%"></div></div>
 </div>
 
+<div class="panel" id="panel-exam_sim">
+  <div style="text-align:center;padding:20px 0" id="examSetup">
+    <div style="font-size:24px;margin-bottom:8px">🎯</div>
+    <div style="font-size:15px;font-weight:600;color:#475569;margin-bottom:16px">模拟考试</div>
+    <div style="display:flex;flex-direction:column;gap:8px;max-width:300px;margin:0 auto">
+      <button class="btn btn-outline btn-block" onclick="startExam('2026-法规',80,120)" style="padding:14px">📜 法规 · 80题 · 120分钟</button>
+      <button class="btn btn-outline btn-block" onclick="startExam('2026-管理',80,120)" style="padding:14px">📊 管理 · 80题 · 120分钟</button>
+      <button class="btn btn-outline btn-block" onclick="startExam('2026-水利',30,60)" style="padding:14px">💧 水利选择 · 30题 · 60分钟</button>
+      <button class="btn btn-outline btn-block" onclick="startExam('水利案例',4,80)" style="padding:14px">📋 水利案例 · 4题 · 80分钟</button>
+    </div>
+  </div>
+  <!-- 考试中 -->
+  <div id="examRunning" style="display:none">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;background:#fef2f2;padding:8px 12px;border-radius:8px;border:1px solid #fecaca">
+      <span style="font-size:12px;font-weight:600;color:#dc2626" id="examTitle">-</span>
+      <span style="font-size:20px;font-weight:900;color:#dc2626;min-width:60px;text-align:right" id="examTimer">--:--</span>
+    </div>
+    <div style="font-size:11px;color:#94a3b8;margin-bottom:6px">第 <span id="examQIdx">1</span>/<span id="examQTotal">0</span> 题</div>
+    <div class="card">
+      <div class="q" id="examQText">-</div>
+      <div class="choices" id="examQChoices"></div>
+      <div id="examMultiHint" style="display:none" class="tip">💡 多选：选你认为对的，少选得0.5分/个</div>
+    </div>
+    <div class="actions">
+      <button class="btn btn-outline" onclick="examPrev()">←</button>
+      <button class="btn btn-primary" onclick="examMark()" id="examMarkBtn" style="flex:2">✓ 标记并下一题</button>
+      <button class="btn btn-outline" onclick="examNext()">→</button>
+    </div>
+    <button class="btn btn-danger btn-block" onclick="examSubmit()" style="margin-top:10px">📤 交卷</button>
+  </div>
+  <!-- 成绩 -->
+  <div id="examResult" style="display:none;text-align:center;padding:16px"></div>
+</div>
 <div class="panel" id="panel-case">
   <div class="stats-bar" id="caseStats"></div>
   <div class="sec-row" id="caseSec"></div>
@@ -498,7 +532,7 @@ function renderTab(type){
     $('examChoices').innerHTML = html;
     $('examBar').style.width = (list.length ? (i+1)/list.length*100 : 0)+'%';
   }
-  else if(type==='case'){ renderCase(); } else if(type==='progress'){
+  else if(type==='exam_sim'){ return; } else if(type==='case'){ renderCase(); } else if(type==='progress'){
     var rT = DATA.recite.length, qT = DATA.quiz.length, eT = DATA.exam.length;
     var rD = 0, qD = 0, eD = 0, qW = 0;
     for(var k in state.rh) if(state.rh[k].status==='easy') rD++;
@@ -1505,7 +1539,7 @@ document.head.appendChild(confettiStyle);
 var _origRT = renderTab;
 renderTab = function(type){
   _origRT(type);
-  if(type==='case'){ renderCase(); } else if(type==='progress'){
+  if(type==='exam_sim'){ return; } else if(type==='case'){ renderCase(); } else if(type==='progress'){
     setTimeout(function(){
       renderAchievements();
       renderCalendar();
@@ -1609,6 +1643,195 @@ window.updateCaseScore = function(){
 };
 
 // 下一题
+
+// ===== 模拟考试 =====
+var examMode = null;
+var examQuestions = [];
+var examAnswers = [];
+var examTimer = null;
+var examSeconds = 0;
+
+window.startExam = function(type, count, minutes){
+  var all = [];
+  if(type==='2026-法规') all = DATA.quiz.filter(function(q){return q.sec==='2026-法规';});
+  else if(type==='2026-管理') all = DATA.quiz.filter(function(q){return q.sec==='2026-管理';});
+  else if(type==='2026-水利'){
+    all = DATA.exam.filter(function(q){return q.sec==='2026-水利';});
+    if(!all.length) all = DATA.exam;
+  }
+  else if(type==='水利案例'){
+    all = DATA.case||[];
+    startCaseExam(all, minutes);
+    return;
+  }
+  if(!all.length){ toast('暂无题目'); return; }
+  examMode = 'mcq';
+  examQuestions = all.slice(0, count);
+  examAnswers = new Array(examQuestions.length);
+  for(var i=0;i<examAnswers.length;i++) examAnswers[i] = null;
+  examSeconds = minutes * 60;
+  
+  document.getElementById('examSetup').style.display = 'none';
+  document.getElementById('examRunning').style.display = 'block';
+  document.getElementById('examResult').style.display = 'none';
+  document.getElementById('examTitle').textContent = type + ' · '+count+'题';
+  document.getElementById('examQTotal').textContent = examQuestions.length;
+  renderExamQuestion(0);
+  startExamTimer();
+  goTab('exam_sim');
+};
+
+function startCaseExam(cases, minutes){
+  examMode = 'case';
+  examQuestions = cases;
+  examAnswers = new Array(cases.length);
+  for(var i=0;i<examAnswers.length;i++) examAnswers[i] = {text:'',score:0};
+  examSeconds = minutes * 60;
+  
+  document.getElementById('examSetup').style.display = 'none';
+  document.getElementById('examRunning').style.display = 'block';
+  document.getElementById('examResult').style.display = 'none';
+  document.getElementById('examTitle').textContent = '水利案例 · '+cases.length+'题';
+  document.getElementById('examQTotal').textContent = cases.length;
+  renderExamQuestion(0);
+  startExamTimer();
+  goTab('exam_sim');
+}
+
+var examCurrent = 0;
+function renderExamQuestion(idx){
+  if(idx < 0 || idx >= examQuestions.length) return;
+  examCurrent = idx;
+  document.getElementById('examQIdx').textContent = idx + 1;
+  
+  var q = examQuestions[idx];
+  if(examMode==='case'){
+    document.getElementById('examQText').innerHTML = '<div style="font-size:12px;color:#94a3b8">📋 '+q.sec+'</div><div style="font-size:12px;margin:6px 0">'+q.scenario+'</div><div style="font-size:13px;font-weight:500;margin-top:8px">'+q.question+'</div>';
+    document.getElementById('examQChoices').innerHTML = '<textarea id="examCaseInput" style="width:100%;min-height:100px;border:1px solid #e2e8f0;border-radius:8px;padding:8px;font-size:12px;font-family:inherit" placeholder="在此作答...">'+(examAnswers[idx].text||'')+'</textarea>';
+    document.getElementById('examMultiHint').style.display = 'none';
+    var saved = examAnswers[idx].score > 0;
+    document.getElementById('examMarkBtn').textContent = saved ? '✓ 已评分('+examAnswers[idx].score+'分)' : '✓ 标记得分';
+    return;
+  }
+  
+  document.getElementById('examQText').textContent = q.q;
+  document.getElementById('examMultiHint').style.display = Array.isArray(q.answer) ? 'block' : 'none';
+  
+  var choices = q.choices||[];
+  var html = '';
+  for(var j=0;j<choices.length;j++){
+    var sel = examAnswers[idx];
+    var isSel = Array.isArray(q.answer) ? (sel||[]).indexOf(j)>=0 : sel===j;
+    html += '<div class="choice'+(isSel?' sel':'')+'" onclick="examPick('+idx+','+j+')"><span class="pre">'+('ABCDEFGH'[j])+'.</span>'+choices[j]+'</div>';
+  }
+  document.getElementById('examQChoices').innerHTML = html;
+  document.getElementById('examMarkBtn').textContent = '✓ 标记并下一题';
+}
+
+window.examPick = function(qIdx, cIdx){
+  var q = examQuestions[qIdx];
+  if(Array.isArray(q.answer)){
+    if(!examAnswers[qIdx]) examAnswers[qIdx] = [];
+    var pos = examAnswers[qIdx].indexOf(cIdx);
+    if(pos >= 0) examAnswers[qIdx].splice(pos, 1);
+    else examAnswers[qIdx].push(cIdx);
+  } else {
+    examAnswers[qIdx] = cIdx;
+  }
+  renderExamQuestion(qIdx);
+};
+
+window.examMark = function(){
+  if(examMode==='case'){
+    var ta = document.getElementById('examCaseInput');
+    if(ta) examAnswers[examCurrent].text = ta.value;
+    // 弹出评分对话框
+    var q = examQuestions[examCurrent];
+    var html = '<div style="font-size:12px;margin-bottom:6px">对照答案自评得分(满分20分):</div>';
+    html += '<div style="font-size:11px;color:#64748b;margin-bottom:8px;white-space:pre-wrap">参考答案:
+';
+    for(var i=0;i<q.points.length;i++) html += (i+1)+'. '+q.points[i]+'
+';
+    html += '</div>';
+    html += '<input type="number" id="caseScoreInput" min="0" max="20" value="'+examAnswers[examCurrent].score+'" style="width:80px;padding:6px;border:1px solid #e2e8f0;border-radius:6px;font-size:16px;text-align:center"> /20分';
+    html += '<div style="margin-top:8px"><button class="btn btn-primary btn-sm" onclick="saveCaseScore()" style="width:100%">确认</button></div>';
+    
+    var el = document.getElementById('examQChoices');
+    el.innerHTML = html;
+    return;
+  }
+  if(examCurrent+1 < examQuestions.length){
+    examCurrent++;
+    renderExamQuestion(examCurrent);
+  }
+};
+
+window.saveCaseScore = function(){
+  var s = parseInt(document.getElementById('caseScoreInput').value)||0;
+  examAnswers[examCurrent].score = Math.min(20, Math.max(0, s));
+  renderExamQuestion(examCurrent);
+  toast('得分已记录: '+examAnswers[examCurrent].score+'/20');
+};
+
+window.examPrev = function(){ if(examCurrent>0){examCurrent--;renderExamQuestion(examCurrent);} };
+window.examNext = function(){ if(examCurrent+1<examQuestions.length){examCurrent++;renderExamQuestion(examCurrent);} };
+
+window.examSubmit = function(){
+  clearInterval(examTimer);
+  document.getElementById('examRunning').style.display = 'none';
+  
+  var el = document.getElementById('examResult');
+  if(examMode==='case'){
+    var total = 0;
+    for(var i=0;i<examAnswers.length;i++) total += examAnswers[i].score||0;
+    var max = examQuestions.length * 20;
+    var pct = Math.round(total/max*100);
+    el.innerHTML = '<div style="font-size:40px;margin:16px 0">🎯</div>'+
+      '<div style="font-size:32px;font-weight:900;color:'+(pct>=60?'#059669':'#dc2626')+'">'+total+'/'+max+'</div>'+
+      '<div style="font-size:14px;color:#64748b">得分率 '+pct+'%' + (pct>=60?' ✅ 及格':' ❌ 需加强') + '</div>'+
+      '<button class="btn btn-outline btn-sm" onclick="location.reload()" style="margin-top:16px">重来</button>';
+  } else {
+    var correct = 0, wrong = 0;
+    for(var i=0;i<examQuestions.length;i++){
+      var q = examQuestions[i];
+      var ans = examAnswers[i];
+      if(ans === null){ wrong++; continue; }
+      if(Array.isArray(q.answer)){
+        if(q.answer.join(',')===ans.join(',')) correct++;
+        else wrong++;
+      } else {
+        if(ans===q.answer) correct++;
+        else wrong++;
+      }
+    }
+    var total = examQuestions.length;
+    var pct = Math.round(correct/total*100);
+    el.innerHTML = '<div style="font-size:40px;margin:16px 0">'+(pct>=60?'🎉':'😅')+'</div>'+
+      '<div style="font-size:32px;font-weight:900;color:'+(pct>=60?'#059669':'#dc2626')+'">'+correct+'/'+total+'</div>'+
+      '<div style="font-size:14px;color:#64748b">正确率 '+pct+'% 正确'+correct+' 错误'+wrong+'</div>'+
+      '<button class="btn btn-outline btn-sm" onclick="location.reload()" style="margin-top:16px">重来</button>';
+  }
+  el.style.display = 'block';
+};
+
+function startExamTimer(){
+  updateExamTimer();
+  examTimer = setInterval(function(){
+    examSeconds--;
+    updateExamTimer();
+    if(examSeconds<=0){ examSubmit(); toast('⏰ 时间到！已自动交卷'); }
+  }, 1000);
+}
+function updateExamTimer(){
+  var m = Math.floor(examSeconds/60);
+  var s = examSeconds%60;
+  var el = document.getElementById('examTimer');
+  if(el) el.textContent = m+':'+(s<10?'0':'')+s;
+  // 最后5分钟红色闪烁
+  if(examSeconds<=300 && examSeconds%2===0) el.style.color = '#dc2626';
+  else el.style.color = examSeconds<=300 ? '#991b1b' : '#dc2626';
+}
+
 window.nextCaseAfterScore = function(){
   var list = DATA.case||[];
   state.cs = (state.cs||0) + 1;
