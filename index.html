@@ -139,13 +139,13 @@ body.dark .daily-plan .big-num{color:#94a3b8}
     <button class="btn btn-outline btn-sm" onclick="resetSpeed()">🔄 重来</button>
     <button class="btn btn-primary btn-sm" onclick="newRound()">▶ 开始新一轮</button>
   </div>
-  <div class="progress-text" id="speedRound" style="font-size:12px;color:#2b6cb0;font-weight:600;margin-top:4px">⚡ 点击开始新一轮</div>
+  <div class="progress-text" id="speedRound" style="font-size:12px;color:#475569;font-weight:600;margin-top:4px">⚡ 点击开始新一轮</div>
   <!-- 醒目倒计时 -->
   <div id="speedTimerBox" style="display:none;text-align:center;margin-top:12px;position:relative">
     <div id="speedTimerNum" style="font-size:72px;font-weight:900;line-height:1;font-family:-apple-system,BlinkMacSystemFont;transition:color .3s,transform .2s"></div>
     <div id="speedTimerLabel" style="font-size:14px;color:#718096;margin-top:2px">秒</div>
     <div style="height:8px;background:#e2e8f0;border-radius:4px;margin-top:8px;overflow:hidden">
-      <div id="speedTimerBar" style="height:100%;background:linear-gradient(90deg,#e53e3e,#d69e2e,#48bb78);transition:width 1s linear;width:100%"></div>
+      <div id="speedTimerBar" style="height:100%;background:linear-gradient(90deg,#dc2626,#d69e2e,#48bb78);transition:width 1s linear;width:100%"></div>
     </div>
     <div style="font-size:12px;color:#718096;margin-top:3px">第<span id="speedQIdx">1</span>/5题</div>
   </div>
@@ -158,9 +158,9 @@ body.dark .daily-plan .big-num{color:#94a3b8}
     <span style="font-size:11px;color:#718096;font-weight:500" id="reciteSectionLabel">全部章节</span>
     <div style="display:flex;align-items:center;gap:6px">
       <div style="width:120px;height:6px;background:#e2e8f0;border-radius:3px;overflow:hidden">
-        <div id="reciteBar" style="height:100%;background:linear-gradient(90deg,#2b6cb0,#48bb78);transition:width .3s;width:0%"></div>
+        <div id="reciteBar" style="height:100%;background:linear-gradient(90deg,#475569,#48bb78);transition:width .3s;width:0%"></div>
       </div>
-      <span style="font-size:13px;font-weight:700;color:#2b6cb0;min-width:50px;text-align:right" id="reciteCount">0/0</span>
+      <span style="font-size:13px;font-weight:700;color:#475569;min-width:50px;text-align:right" id="reciteCount">0/0</span>
     </div>
   </div>
 
@@ -174,7 +174,7 @@ body.dark .daily-plan .big-num{color:#94a3b8}
     <div class="swipe-hint right" id="swipeRight">记住了 👉</div>
     <!-- 角标 -->
     <div style="position:absolute;top:12px;left:14px;right:14px;display:flex;justify-content:space-between;align-items:center">
-      <span style="font-size:11px;background:#ebf4ff;color:#2b6cb0;padding:2px 8px;border-radius:4px;font-weight:500" id="reciteTag">-</span>
+      <span style="font-size:11px;background:#f1f5f9;color:#475569;padding:2px 8px;border-radius:4px;font-weight:500" id="reciteTag">-</span>
       <span style="font-size:11px;color:#a0aec0" id="reciteSub">-</span>
     </div>
     <!-- 问题区 -->
@@ -184,7 +184,7 @@ body.dark .daily-plan .big-num{color:#94a3b8}
     </div>
     <!-- 答案区（默认隐藏） -->
     <div id="reciteAnswerArea" style="display:none;margin-top:16px;padding-top:16px;border-top:2px dashed #e2e8f0">
-      <div style="font-size:13px;color:#38a169;margin-bottom:6px">✅ 答案</div>
+      <div style="font-size:13px;color:#059669;margin-bottom:6px">✅ 答案</div>
       <div style="font-size:15px;line-height:1.7;color:#222" id="reciteA">-</div>
     </div>
     <!-- 未翻开提示 -->
@@ -195,9 +195,9 @@ body.dark .daily-plan .big-num{color:#94a3b8}
   <div id="reciteActions" style="display:none;margin-top:12px">
     <div style="font-size:13px;color:#718096;text-align:center;margin-bottom:8px">你记住了吗？</div>
     <div style="display:flex;gap:10px">
-      <button style="flex:1;padding:14px 8px;border:none;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer;background:#fff5f5;color:#e53e3e;border:2px solid #fed7d7" onclick="markR('hard')">😣 不熟</button>
+      <button style="flex:1;padding:14px 8px;border:none;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer;background:#fff5f5;color:#dc2626;border:2px solid #fed7d7" onclick="markR('hard')">😣 不熟</button>
       <button style="flex:1;padding:14px 8px;border:none;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer;background:#fffff0;color:#d69e2e;border:2px solid #fefcbf" onclick="markR('ok')">🤔 还行</button>
-      <button style="flex:1;padding:14px 8px;border:none;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer;background:#f0fff4;color:#38a169;border:2px solid #c6f6d5" onclick="markR('easy')">✅ 记住了</button>
+      <button style="flex:1;padding:14px 8px;border:none;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer;background:#f0fff4;color:#059669;border:2px solid #c6f6d5" onclick="markR('easy')">✅ 记住了</button>
     </div>
   </div>
 
@@ -447,7 +447,7 @@ function renderTab(type){
           else { if(h.last) done++; if(h.wrong>0) wrong++; }
         });
         var pct = total?Math.round(done/total*100):0;
-        html += '<div style="margin-bottom:6px"><div style="display:flex;justify-content:space-between;font-size:12px"><span>'+label+'·'+s+'</span><span>'+done+'/'+total+(wrong?' <span style="color:#e53e3e">错'+wrong+'</span>':'')+'</span></div><div style="height:4px;background:#e2e8f0;border-radius:2px;overflow:hidden;margin:2px 0"><div style="height:100%;width:'+pct+'%;background:'+(pct<40?'#e53e3e':pct<80?'#d69e2e':'#38a169')+'"></div></div></div>';
+        html += '<div style="margin-bottom:6px"><div style="display:flex;justify-content:space-between;font-size:12px"><span>'+label+'·'+s+'</span><span>'+done+'/'+total+(wrong?' <span style="color:#dc2626">错'+wrong+'</span>':'')+'</span></div><div style="height:4px;background:#e2e8f0;border-radius:2px;overflow:hidden;margin:2px 0"><div style="height:100%;width:'+pct+'%;background:'+(pct<40?'#dc2626':pct<80?'#d69e2e':'#059669')+'"></div></div></div>';
       });
     });
     html += '<button class="btn btn-outline btn-block" style="margin-top:10px" onclick="goTab(\'quiz\')">📝 去刷题</button></div>';
@@ -628,9 +628,9 @@ function updateTimerUI(){
   if(idx) idx.textContent = speedIdx + 1;
   // 颜色变化：绿色→黄色→红色
   if(speedTimeLeft <= 3){
-    num.style.color = '#e53e3e';
+    num.style.color = '#dc2626';
     num.style.transform = 'scale(1.15)';
-    bar.style.background = '#e53e3e';
+    bar.style.background = '#dc2626';
     // 闪烁效果：交替缩放
     if(speedTimeLeft <= 2){
       num.style.animation = 'none';
@@ -643,9 +643,9 @@ function updateTimerUI(){
     bar.style.background = '#d69e2e';
     num.style.animation = 'none';
   } else {
-    num.style.color = '#38a169';
+    num.style.color = '#059669';
     num.style.transform = 'scale(1)';
-    bar.style.background = '#38a169';
+    bar.style.background = '#059669';
     num.style.animation = 'none';
   }
 }
@@ -655,7 +655,7 @@ function showSpeed(){
     // 隐藏大号计时器
     var tbox = $('speedTimerBox');
     if(tbox) tbox.style.display = 'none';
-    $('speedQ').innerHTML = '<div style="text-align:center"><div style="font-size:32px;font-weight:700;color:#38a169">完成!</div><div>答对'+(5-speedQ.filter(function(q){return q._wrong;}).length)+'/5题 · 连对'+speedStreak+'</div></div>';
+    $('speedQ').innerHTML = '<div style="text-align:center"><div style="font-size:32px;font-weight:700;color:#059669">完成!</div><div>答对'+(5-speedQ.filter(function(q){return q._wrong;}).length)+'/5题 · 连对'+speedStreak+'</div></div>';
     $('speedChoices').innerHTML = '';
     $('speedScore').textContent = '连对'+speedStreak;
     if(speedStreak > speedBest) speedBest = speedStreak;
