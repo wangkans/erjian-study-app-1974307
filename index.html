@@ -56,12 +56,44 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;b
 .empty{text-align:center;padding:40px 20px;color:#718096}
 .empty .icon{font-size:48px;margin-bottom:10px}
 @keyframes pulse{0%,100%{transform:scale(1.15)}50%{transform:scale(0.95)}}
+
+/* 深色模式 */
+body.dark{background:#1a202c;color:#e2e8f0}
+body.dark .header{background:linear-gradient(135deg,#0d1b2a,#1b3a5c)}
+body.dark .tabs{background:#2d3748;border-color:#4a5568}
+body.dark .tab{color:#a0aec0}
+body.dark .tab.active{color:#63b3ed;border-color:#63b3ed}
+body.dark .card,body.dark #reciteCard{background:#2d3748;box-shadow:0 2px 16px rgba(0,0,0,.3)}
+body.dark .card .q,body.dark #reciteQ{color:#e2e8f0}
+body.dark .card .a,body.dark #reciteA{color:#cbd5e0}
+body.dark #reciteAnswerArea{border-color:#4a5568}
+body.dark #reciteAnswerArea>div:first-child{color:#68d391}
+body.dark .panel{color:#e2e8f0}
+body.dark .stat-card{background:#2d3748;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+body.dark .stat-card .num{color:#63b3ed}
+body.dark .choice{background:#2d3748;border-color:#4a5568;color:#e2e8f0}
+body.dark .choice.sel{background:#1a365d;border-color:#63b3ed}
+body.dark .choice.correct{background:#1c4532;border-color:#68d391}
+body.dark .choice.wrong{background:#4a2525;border-color:#fc8181}
+body.dark .choice.reveal-correct{background:#1c4532;border-color:#68d391}
+body.dark .sec-btn{background:#2d3748;border-color:#4a5568;color:#a0aec0}
+body.dark .sec-btn.active{background:#63b3ed;color:#1a202c}
+body.dark .tag{background:#1a365d;color:#63b3ed}
+body.dark #reciteTapHint{color:#718096}
+body.dark #progressDetail>div{background:#2d3748}
+body.dark .tip{background:#2d2416;color:#ecc94b}
+body.dark .toast{background:rgba(255,255,255,.9);color:#1a202c}
+/* 滑动动画 */
+.swipe-hint{position:absolute;top:50%;transform:translateY(-50%);font-size:28px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:10}
+.swipe-hint.left{left:16px}
+.swipe-hint.right{right:16px}
+
 </style>
 </head>
 <body>
 
 <div class="header">
-  <h1>📚 二建备考题库</h1>
+  <h1>📚 二建备考题库 <span style="float:right;cursor:pointer;font-size:14px;opacity:.85" onclick="toggleDark()" id="darkBtn">🌙</span></h1>
   <div class="sub" id="subDate">加载中...</div>
   <div class="cd" id="cdText">⏳ 加载中</div>
 </div>
@@ -112,9 +144,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;b
 
   <!-- 章节筛选 -->
   <div class="sec-row" id="reciteSec" style="margin-bottom:6px"></div>
+  <div style="display:flex;justify-content:flex-end;margin-bottom:4px"><label style="font-size:11px;color:#718096;cursor:pointer;display:flex;align-items:center;gap:4px" onclick="toggleUnmastered()"><input type="checkbox" id="unmasteredChk" style="margin:0"> 只显示未掌握</label></div>
 
   <!-- 主卡片：点击翻答案 -->
-  <div id="reciteCard" style="background:#fff;border-radius:16px;box-shadow:0 2px 16px rgba(0,0,0,.08);padding:24px 20px 20px;min-height:260px;position:relative;cursor:pointer;user-select:none;overflow:hidden" onclick="flipAnswer()">
+  <div id="reciteCard" style="background:#fff;border-radius:16px;box-shadow:0 2px 16px rgba(0,0,0,.08);padding:24px 20px 20px;min-height:260px;position:relative;cursor:pointer;user-select:none;overflow:hidden;touch-action:pan-y" onclick="flipAnswer()" ontouchstart="swipeStart(event)" ontouchend="swipeEnd(event)">
+    <div class="swipe-hint left" id="swipeLeft">👈 不熟</div>
+    <div class="swipe-hint right" id="swipeRight">记住了 👉</div>
     <!-- 角标 -->
     <div style="position:absolute;top:12px;left:14px;right:14px;display:flex;justify-content:space-between;align-items:center">
       <span style="font-size:11px;background:#ebf4ff;color:#2b6cb0;padding:2px 8px;border-radius:4px;font-weight:500" id="reciteTag">-</span>
@@ -153,6 +188,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;b
 
 <div class="panel" id="panel-quiz">
   <div class="stats-bar" id="quizStats"></div>
+  <div style="display:flex;gap:6px;margin-bottom:6px"><button class="btn btn-sm btn-outline" onclick="retryWrong('quiz')" id="quizWrongBtn" style="font-size:10px;padding:4px 10px">🔁 错题重练</button></div>
   <div class="sec-row" id="quizSec"></div>
   <div class="card" id="quizCard">
     <div class="meta"><span class="tag" id="quizTag">-</span><span id="quizIdx">0/0</span></div>
@@ -168,6 +204,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;b
 
 <div class="panel" id="panel-exam">
   <div class="stats-bar" id="examStats"></div>
+  <div style="display:flex;gap:6px;margin-bottom:6px"><button class="btn btn-sm btn-outline" onclick="retryWrong('exam')" id="examWrongBtn" style="font-size:10px;padding:4px 10px">🔁 错题重练</button></div>
   <div class="sec-row" id="examSec"></div>
   <div class="card" id="examCard">
     <div class="meta"><span class="tag" id="examTag">-</span><span id="examIdx">0/0</span></div>
@@ -674,6 +711,115 @@ window.resetSpeed = function(){
 };
 
 // 初始化
+
+// === 深色模式 ===
+window.toggleDark = function(){
+  var b = document.body;
+  b.classList.toggle('dark');
+  var isDark = b.classList.contains('dark');
+  document.getElementById('darkBtn').textContent = isDark ? '☀️' : '🌙';
+  try{ localStorage.setItem('ejian_dark', isDark?'1':'0'); }catch(e){}
+};
+// 恢复深色模式
+(function(){
+  try{ if(localStorage.getItem('ejian_dark')==='1'){ document.body.classList.add('dark'); document.addEventListener('DOMContentLoaded',function(){var b=document.getElementById('darkBtn');if(b)b.textContent='☀️';}); } }catch(e){}
+})();
+
+// === 未掌握过滤 ===
+var filterUnmastered = false;
+window.toggleUnmastered = function(){
+  filterUnmastered = !filterUnmastered;
+  document.getElementById('unmasteredChk').checked = filterUnmastered;
+  state.r = 0;
+  renderTab('recite');
+};
+function getListR(){
+  var data = DATA.recite||[];
+  var sec = state.rs;
+  var list = sec==='all' ? data : data.filter(function(d){return d.sec===sec;});
+  if(filterUnmastered){
+    list = list.filter(function(d){return getH('rh',d.id).status!=='easy';});
+  }
+  return list;
+}
+
+// === 错题重练 ===
+window.retryWrong = function(mode){
+  var list = mode==='quiz' ? DATA.quiz : DATA.exam;
+  var hkey = mode==='quiz' ? 'qh' : 'eh';
+  var wrongIds = [];
+  for(var i=0;i<list.length;i++){
+    var h = getH(hkey, list[i].id);
+    if(h.wrong > 0) wrongIds.push(i);
+  }
+  if(!wrongIds.length){ toast('没有错题，继续加油!'); return; }
+  // 临时替换列表为错题子集
+  if(mode==='quiz'){
+    state._origQS = state.qs; state._origQ = state.q;
+    state.qs = '__wrong__'; state.q = 0;
+    state._wrongCache = wrongIds;
+  } else {
+    state._origES = state.es; state._origE = state.e;
+    state.es = '__wrong__'; state.e = 0;
+    state._wrongCache = wrongIds;
+  }
+  renderTab(mode);
+  toast('错题重练: '+wrongIds.length+'题');
+};
+// 重写 getList 支持错题模式
+var _getList = getList;
+getList = function(type){
+  if(type==='recite') return getListR();
+  if(type==='quiz' && state.qs==='__wrong__'){
+    return state._wrongCache.map(function(i){return DATA.quiz[i];});
+  }
+  if(type==='exam' && state.es==='__wrong__'){
+    return state._wrongCache.map(function(i){return DATA.exam[i];});
+  }
+  return _getList(type);
+};
+// 退出错题模式
+function exitWrong(mode){
+  if(mode==='quiz' && state.qs==='__wrong__'){
+    state.qs = state._origQS || 'all'; state.q = state._origQ || 0;
+    delete state._origQS; delete state._origQ; delete state._wrongCache;
+  }
+  if(mode==='exam' && state.es==='__wrong__'){
+    state.es = state._origES || 'all'; state.e = state._origE || 0;
+    delete state._origES; delete state._origE; delete state._wrongCache;
+  }
+  renderTab(mode);
+}
+
+// === 滑动手势 ===
+var swipeStartX = 0;
+window.swipeStart = function(e){
+  if(e.touches && e.touches.length===1) swipeStartX = e.touches[0].clientX;
+};
+window.swipeEnd = function(e){
+  if(!e.changedTouches || e.changedTouches.length!==1) return;
+  var dx = e.changedTouches[0].clientX - swipeStartX;
+  var area = document.getElementById('reciteAnswerArea');
+  var isOpen = area && area.style.display==='block';
+  if(!isOpen) return; // 答案未翻开，不处理滑动
+  if(dx > 80){ markR('easy'); }  // 右滑=记住了
+  else if(dx < -80){ markR('hard'); } // 左滑=不熟
+  swipeStartX = 0;
+};
+// 滑动时视觉反馈
+var _origAddEvt = document.addEventListener;
+document.addEventListener('touchmove', function(e){
+  if(!e.target.closest('#reciteCard')) return;
+  var area = document.getElementById('reciteAnswerArea');
+  if(!area || area.style.display==='none') return;
+  var dx = (e.touches[0].clientX - swipeStartX);
+  var left = document.getElementById('swipeLeft');
+  var right = document.getElementById('swipeRight');
+  if(left) left.style.opacity = dx < -20 ? Math.min(1, Math.abs(dx)/80) : '0';
+  if(right) right.style.opacity = dx > 20 ? Math.min(1, dx/80) : '0';
+}, {passive:true});
+
+
 function init(){
   try{
     var d = new Date();
