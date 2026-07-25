@@ -939,7 +939,7 @@ var autoFlowPhases = [
   {name:'刷题练习', type:'quiz', icon:'📝'},
   {name:'真题实战', type:'exam', icon:'📄'}
 ];
-window.startAutoFlow = function(){
+window.window.startAutoFlow = function(){
   if(autoFlowActive) return;
   autoFlowActive = true;
   autoFlowPhase = 0;
@@ -1130,7 +1130,7 @@ window.togglePomodoro = function(){
   if(pomoActive){ stopPomodoro(); return; }
   startPomodoro();
 };
-function startPomodoro(){
+window.startPomodoro = function(){
   pomoActive=true;pomoSeconds=25*60;
   document.getElementById("pomodoroBar").style.display="block";
   document.getElementById("pomoBtn").style.fontWeight="600";
@@ -1141,7 +1141,7 @@ function startPomodoro(){
     if(pomoSeconds<=0){ stopPomodoro(); toast("\uD83C\uDF45 25分钟到！"); }
   },1000);
 }
-function stopPomodoro(){
+window.stopPomodoro = function(){
   pomoActive=false;
   if(pomoTimer){clearInterval(pomoTimer);pomoTimer=null;}
   document.getElementById("pomodoroBar").style.display="none";
