@@ -1,29 +1,20 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>扫码打开题库</title>
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>扫码打开</title>
 <style>
-body{display:flex;justify-content:center;align-items:center;min-height:100vh;margin:0;background:#f5f5f5;font-family:-apple-system,BlinkMacSystemFont,sans-serif}
-.card{background:#fff;border-radius:16px;padding:40px;text-align:center;box-shadow:0 4px 20px rgba(0,0,0,.1);max-width:340px}
-h2{margin:0 0 6px;color:#2b6cb0;font-size:20px}
-p{color:#718096;font-size:14px;margin:8px 0}
-.qr{padding:12px;background:#fff;border-radius:12px;display:inline-block}
-.qr svg{width:220px;height:220px;display:block}
-.btn{display:inline-block;margin-top:14px;padding:12px 28px;background:#2b6cb0;color:#fff;border-radius:8px;text-decoration:none;font-size:16px;font-weight:500;border:none;cursor:pointer}
-.copy{font-size:12px;color:#a0aec0;word-break:break-all;margin-top:12px;padding:8px;background:#f7fafc;border-radius:6px}
-</style>
-</head>
-<body>
+body{display:flex;justify-content:center;align-items:center;min-height:100vh;margin:0;background:#f5f5f5;font-family:-apple-system,sans-serif}
+.card{background:#fff;border-radius:16px;padding:36px;text-align:center;box-shadow:0 4px 20px rgba(0,0,0,.1);max-width:320px}
+h2{margin:0 0 6px;color:#2b6cb0;font-size:18px}
+p{color:#718096;font-size:13px;margin:8px 0}
+.qr{padding:12px}
+.qr svg{width:220px;height:220px;display:block;margin:0 auto}
+.shorturl{font-size:18px;font-weight:700;color:#2b6cb0;margin:10px 0}
+.btn{display:inline-block;padding:12px 28px;background:#2b6cb0;color:#fff;border-radius:8px;text-decoration:none;font-size:16px;margin-top:8px}
+</style></head><body>
 <div class="card">
-<h2>📚 二建备考</h2>
-<p>用手机相机/微信扫码直接打开</p>
-<div class="qr">
-<svg xmlns="http://www.w3.org/2000/svg" width="220" height="220" viewBox="0 0 205 205"><path stroke="#000" stroke-width="5" d="M4 4.5h7m2 0h1m1 0h3m1 0h3m1 0h2m2 0h2m1 0h7m-33 1h1m5 0h1m7 0h2m2 0h1m2 0h1m1 0h1m2 0h1m5 0h1m-33 1h1m1 0h3m1 0h1m2 0h1m1 0h2m1 0h1m2 0h2m4 0h1m2 0h1m1 0h3m1 0h1m-33 1h1m1 0h3m1 0h1m5 0h2m4 0h1m3 0h2m2 0h1m1 0h3m1 0h1m-33 1h1m1 0h3m1 0h1m2 0h1m1 0h6m6 0h1m2 0h1m1 0h3m1 0h1m-33 1h1m5 0h1m1 0h2m2 0h8m1 0h2m3 0h1m5 0h1m-33 1h7m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h7m-24 1h1m1 0h1m2 0h1m2 0h6m1 0h1m-25 1h1m2 0h1m1 0h2m1 0h1m2 0h1m1 0h1m1 0h2m1 0h4m1 0h1m1 0h1m1 0h1m-27 1h1m1 0h1m1 0h1m1 0h2m3 0h3m2 0h2m6 0h3m4 0h1m-31 1h7m1 0h1m1 0h3m4 0h1m1 0h2m1 0h1m1 0h3m1 0h3m-31 1h4m6 0h3m5 0h4m4 0h2m2 0h1m-31 1h2m2 0h1m3 0h1m1 0h1m1 0h1m1 0h2m2 0h2m4 0h2m1 0h1m1 0h1m-28 1h1m3 0h5m4 0h1m1 0h3m2 0h1m1 0h3m2 0h2m-32 1h8m2 0h1m2 0h1m5 0h1m2 0h4m1 0h4m-30 1h1m2 0h1m1 0h1m1 0h1m2 0h1m4 0h2m2 0h1m4 0h2m1 0h1m1 0h1m-27 1h4m1 0h4m2 0h2m1 0h3m4 0h1m1 0h2m1 0h1m-32 1h1m7 0h1m3 0h1m1 0h1m6 0h3m1 0h1m1 0h1m1 0h1m1 0h1m-30 1h2m1 0h2m2 0h4m1 0h1m9 0h2m4 0h1m1 0h1m-31 1h1m5 0h2m1 0h1m1 0h1m1 0h5m1 0h1m2 0h1m1 0h2m4 0h1m-31 1h2m2 0h3m1 0h1m2 0h2m1 0h1m4 0h1m1 0h1m1 0h1m1 0h1m-27 1h1m1 0h2m2 0h1m2 0h4m2 0h2m2 0h1m1 0h1m1 0h1m1 0h2m1 0h1m1 0h2m-33 1h5m1 0h2m2 0h1m1 0h2m3 0h1m1 0h2m4 0h3m4 0h1m-32 1h2m6 0h1m3 0h2m1 0h1m3 0h3m1 0h1m1 0h2m4 0h1m-33 1h1m1 0h1m3 0h2m1 0h2m1 0h1m1 0h2m1 0h2m2 0h2m1 0h5m2 0h1m-24 1h2m1 0h2m1 0h1m1 0h1m2 0h1m1 0h1m2 0h1m3 0h2m1 0h2m-33 1h7m3 0h2m1 0h2m5 0h3m1 0h1m1 0h1m1 0h3m-31 1h1m5 0h1m1 0h1m2 0h1m2 0h2m1 0h1m3 0h4m3 0h1m-29 1h1m1 0h3m1 0h1m2 0h1m2 0h2m3 0h1m1 0h1m1 0h2m1 0h6m1 0h2m-33 1h1m1 0h3m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m2 0h2m2 0h1m3 0h2m1 0h3m-31 1h1m1 0h3m1 0h1m2 0h1m1 0h4m1 0h1m4 0h1m2 0h2m2 0h3m1 0h1m-33 1h1m5 0h1m2 0h2m2 0h3m1 0h2m1 0h2m1 0h2m4 0h1m-30 1h7m1 0h1m1 0h4m4 0h1m2 0h1m2 0h3m1 0h1m2 0h1"/></svg>
-</div>
-<a class="btn" href="https://a06244d97c3c877f-112-112-42-107.serveousercontent.com">📱 直接打开</a>
-<div class="copy">链接较长，用手机相机扫码即可</div>
-</div>
-</body>
-</html>
+<h2>📚 二建备考题库</h2>
+<p>手机扫码或点击打开</p>
+<div class="qr"><svg width="165" height="165" class="segno"><path transform="scale(5)" class="qrline" stroke="#000" d="M4 4.5h7m1 0h1m1 0h4m1 0h1m2 0h7m-25 1h1m5 0h1m3 0h3m1 0h1m1 0h1m1 0h1m5 0h1m-25 1h1m1 0h3m1 0h1m1 0h2m1 0h3m2 0h1m1 0h1m1 0h3m1 0h1m-25 1h1m1 0h3m1 0h1m2 0h2m2 0h2m1 0h1m1 0h1m1 0h3m1 0h1m-25 1h1m1 0h3m1 0h1m2 0h1m2 0h2m2 0h1m1 0h1m1 0h3m1 0h1m-25 1h1m5 0h1m1 0h1m3 0h3m1 0h1m1 0h1m5 0h1m-25 1h7m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h7m-16 1h2m3 0h3m-17 1h1m1 0h1m3 0h2m5 0h1m2 0h1m2 0h1m2 0h1m1 0h1m-25 1h4m3 0h3m1 0h2m2 0h1m2 0h2m1 0h1m1 0h2m-25 1h1m3 0h3m1 0h1m1 0h6m5 0h2m1 0h1m-24 1h3m3 0h2m1 0h1m1 0h1m1 0h1m1 0h1m4 0h1m-21 1h1m1 0h2m1 0h1m3 0h1m1 0h1m2 0h1m2 0h2m4 0h1m-23 1h1m1 0h2m1 0h1m1 0h1m2 0h1m1 0h3m1 0h2m3 0h2m-25 1h2m1 0h1m2 0h1m5 0h2m1 0h4m2 0h2m1 0h1m-22 1h1m1 0h1m1 0h6m2 0h1m1 0h5m-22 1h7m2 0h2m2 0h1m1 0h6m2 0h1m-16 1h2m3 0h1m1 0h2m3 0h1m3 0h1m-25 1h7m1 0h1m2 0h1m1 0h2m1 0h1m1 0h1m1 0h1m3 0h1m-25 1h1m5 0h1m2 0h1m5 0h2m3 0h1m3 0h1m-25 1h1m1 0h3m1 0h1m2 0h1m1 0h10m3 0h1m-25 1h1m1 0h3m1 0h1m3 0h1m1 0h1m3 0h2m2 0h1m1 0h2m-24 1h1m1 0h3m1 0h1m1 0h2m2 0h3m2 0h1m1 0h3m1 0h2m-25 1h1m5 0h1m3 0h3m3 0h1m1 0h3m-21 1h7m1 0h1m3 0h5m4 0h1m2 0h1"/></svg></div>
+<div class="shorturl">clck.ru/3UwAtH</div>
+<a class="btn" href="https://clck.ru/3UwAtH">📱 打开题库</a>
+</div></body></html>
