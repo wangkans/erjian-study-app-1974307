@@ -205,7 +205,10 @@ function getSections(type){let s=new Set();(allData[type]||[]).forEach(d=>{if(d.
 function applyFilter(type){let sec=state[type].section,all=allData[type]||[];state[type].list=sec==='all'?all:all.filter(d=>d.sec===sec);if(state[type].idx>=state[type].list.length)state[type].idx=0}
 
 function renderAll(){
-  renderRecite();renderQuiz();renderExam();renderProgress();renderSpeed();
+  renderReciteSections();renderRecite();
+  renderQuizSections();renderQuiz();
+  renderExamSections();renderExam();
+  renderProgress();
   saveState()
 }
 
