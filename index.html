@@ -455,10 +455,39 @@ window.newRound = function(){
   speedIdx = 0;
   speedScore = 0;
   speedStreak = 0;
+  if(speedTimer) clearInterval(speedTimer);
+  speedTimeLeft = 10;
+  startSpeedTimer();
   showSpeed();
 };
+
+var speedTimer = null;
+var speedTimeLeft = 10;
+function startSpeedTimer(){
+  updateTimerUI();
+  speedTimer = setInterval(function(){
+    speedTimeLeft--;
+    updateTimerUI();
+    if(speedTimeLeft <= 0){
+      clearInterval(speedTimer);
+      speedTimer = null;
+      // 超时算错
+      if(speedIdx < speedQ.length){
+        var item = speedQ[speedIdx];
+        item._wrong = true;
+        showToast('⏰ 超时!');
+        setTimeout(function(){ speedIdx++; showSpeed(); speedTimeLeft = 10; }, 800);
+      }
+    }
+  }, 1000);
+}
+function updateTimerUI(){
+  var el = $('speedRound');
+  if(el) el.textContent = '第'+(speedIdx+1)+'题/本轮5题 · 倒计时'+speedTimeLeft+'s';
+}
 function showSpeed(){
   if(speedIdx >= speedQ.length){
+    if(speedTimer){ clearInterval(speedTimer); speedTimer = null; }
     $('speedQ').innerHTML = '<div style="text-align:center"><div style="font-size:32px;font-weight:700;color:#38a169">完成!</div><div>答对'+(5-speedQ.filter(function(q){return q._wrong;}).length)+'/5题 · 连对'+speedStreak+'</div></div>';
     $('speedChoices').innerHTML = '';
     $('speedScore').textContent = '连对'+speedStreak;
@@ -525,7 +554,9 @@ window.pickSpd = function(el, idx){
   else { speedStreak++; if(speedStreak > speedBest) speedBest = speedStreak; }
   toast(isCorrect ? '✓ 答对了!' : '✗ 错了');
   saveState();
-  setTimeout(function(){ speedIdx++; showSpeed(); }, isCorrect ? 500 : 1500);
+  // 答完停计时, 下一题时重置
+  if(speedTimer){ clearInterval(speedTimer); speedTimer = null; }
+  setTimeout(function(){ speedIdx++; speedTimeLeft = 10; startSpeedTimer(); showSpeed(); }, isCorrect ? 500 : 1500);
 };
 window.resetSpeed = function(){
   speedBest = 0;
