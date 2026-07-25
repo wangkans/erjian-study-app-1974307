@@ -55,6 +55,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;b
 .toast{position:fixed;bottom:100px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.85);color:#fff;padding:10px 20px;border-radius:8px;font-size:13px;z-index:999;display:none;max-width:90%}
 .empty{text-align:center;padding:40px 20px;color:#718096}
 .empty .icon{font-size:48px;margin-bottom:10px}
+@keyframes pulse{0%,100%{transform:scale(1.15)}50%{transform:scale(0.95)}}
 </style>
 </head>
 <body>
@@ -85,6 +86,15 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;b
     <button class="btn btn-primary btn-sm" onclick="newRound()">▶ 开始新一轮</button>
   </div>
   <div class="progress-text" id="speedRound" style="font-size:12px;color:#2b6cb0;font-weight:600;margin-top:4px">⚡ 点击开始新一轮</div>
+  <!-- 醒目倒计时 -->
+  <div id="speedTimerBox" style="display:none;text-align:center;margin-top:12px;position:relative">
+    <div id="speedTimerNum" style="font-size:72px;font-weight:900;line-height:1;font-family:-apple-system,BlinkMacSystemFont;transition:color .3s,transform .2s"></div>
+    <div id="speedTimerLabel" style="font-size:14px;color:#718096;margin-top:2px">秒</div>
+    <div style="height:8px;background:#e2e8f0;border-radius:4px;margin-top:8px;overflow:hidden">
+      <div id="speedTimerBar" style="height:100%;background:linear-gradient(90deg,#e53e3e,#d69e2e,#48bb78);transition:width 1s linear;width:100%"></div>
+    </div>
+    <div style="font-size:12px;color:#718096;margin-top:3px">第<span id="speedQIdx">1</span>/5题</div>
+  </div>
   <div id="speedHistory" style="margin-top:8px"></div>
 </div>
 
@@ -483,12 +493,47 @@ function startSpeedTimer(){
   }, 1000);
 }
 function updateTimerUI(){
-  var el = $('speedRound');
-  if(el) el.textContent = '第'+(speedIdx+1)+'题/本轮5题 · 倒计时'+speedTimeLeft+'s';
+  var box = $('speedTimerBox');
+  var num = $('speedTimerNum');
+  var bar = $('speedTimerBar');
+  var idx = $('speedQIdx');
+  if(!box || !num) return;
+  if(speedTimeLeft > 0){
+    box.style.display = 'block';
+  }
+  num.textContent = speedTimeLeft;
+  var pct = (speedTimeLeft/10)*100;
+  bar.style.width = pct + '%';
+  if(idx) idx.textContent = speedIdx + 1;
+  // 颜色变化：绿色→黄色→红色
+  if(speedTimeLeft <= 3){
+    num.style.color = '#e53e3e';
+    num.style.transform = 'scale(1.15)';
+    bar.style.background = '#e53e3e';
+    // 闪烁效果：交替缩放
+    if(speedTimeLeft <= 2){
+      num.style.animation = 'none';
+      num.offsetHeight; // reflow
+      num.style.animation = 'pulse 0.5s ease-in-out infinite';
+    }
+  } else if(speedTimeLeft <= 6){
+    num.style.color = '#d69e2e';
+    num.style.transform = 'scale(1.05)';
+    bar.style.background = '#d69e2e';
+    num.style.animation = 'none';
+  } else {
+    num.style.color = '#38a169';
+    num.style.transform = 'scale(1)';
+    bar.style.background = '#38a169';
+    num.style.animation = 'none';
+  }
 }
 function showSpeed(){
   if(speedIdx >= speedQ.length){
     if(speedTimer){ clearInterval(speedTimer); speedTimer = null; }
+    // 隐藏大号计时器
+    var tbox = $('speedTimerBox');
+    if(tbox) tbox.style.display = 'none';
     $('speedQ').innerHTML = '<div style="text-align:center"><div style="font-size:32px;font-weight:700;color:#38a169">完成!</div><div>答对'+(5-speedQ.filter(function(q){return q._wrong;}).length)+'/5题 · 连对'+speedStreak+'</div></div>';
     $('speedChoices').innerHTML = '';
     $('speedScore').textContent = '连对'+speedStreak;
