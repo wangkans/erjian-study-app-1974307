@@ -101,10 +101,11 @@ body.dark .daily-plan .big-num{color:#94a3b8}
 <body>
 
 <div class="header">
-  <h1>📚 二建备考题库 <span style="float:right;cursor:pointer;font-size:14px;opacity:.85" onclick="toggleDark()" id="darkBtn">🌙</span></h1>
+  <h1>📚 二建备考题库 <span style="float:right;cursor:pointer;font-size:14px;opacity:.85;display:flex;gap:6px"><span onclick="togglePomodoro()" id="pomoBtn" style="cursor:pointer">🍅</span><span onclick="toggleDark()" id="darkBtn" style="cursor:pointer">🌙</span></span></h1>
   <div class="sub" id="subDate">加载中...</div>
   <div class="cd" id="cdText">⏳ 加载中</div>
 </div>
+  <div id="pomodoroBar" style="display:none;text-align:center;background:#fef2f2;padding:4px;font-size:11px;font-weight:600;color:#dc2626;border-bottom:1px solid #fecaca">🍅 专注 <span id="pomoTime">25:00</span> · <span onclick="togglePomodoro()" style="cursor:pointer;text-decoration:underline">停止</span></div>
 
 <div class="tabs">
   <div class="tab active" data-tab="speed" onclick="goTab('speed')"><span class="em">⚡</span>冲刺</div>
@@ -166,7 +167,7 @@ body.dark .daily-plan .big-num{color:#94a3b8}
 
   <!-- 章节筛选 -->
   <div class="sec-row" id="reciteSec" style="margin-bottom:6px"></div>
-  <div style="display:flex;justify-content:flex-end;margin-bottom:4px"><label style="font-size:11px;color:#718096;cursor:pointer;display:flex;align-items:center;gap:4px" onclick="toggleUnmastered()"><input type="checkbox" id="unmasteredChk" style="margin:0"> 只显示未掌握</label></div>
+  <div style="display:flex;justify-content:flex-end;margin-bottom:4px"><label style="font-size:11px;color:#718096;cursor:pointer;display:flex;align-items:center;gap:4px" onclick="toggleUnmastered()"><input type="checkbox" id="unmasteredChk" style="margin:0"> 未掌握 &nbsp; <input type="checkbox" id="shuffleChk" style="margin:0" onclick="toggleShuffle()"> 乱序</label></div>
 
   <!-- 主卡片：点击翻答案 -->
   <div id="reciteCard" style="background:#fff;border-radius:16px;box-shadow:0 2px 16px rgba(0,0,0,.08);padding:24px 20px 20px;min-height:260px;position:relative;cursor:pointer;user-select:none;overflow:hidden;touch-action:pan-y" onclick="flipAnswer()" ontouchstart="swipeStart(event)" ontouchend="swipeEnd(event)">
@@ -242,6 +243,10 @@ body.dark .daily-plan .big-num{color:#94a3b8}
 
 <div class="panel" id="panel-progress">
   <div class="stats-bar" id="progressStats"></div>
+  <div style="background:#fff;border-radius:10px;border:1px solid #e2e8f0;padding:12px;margin-bottom:8px">
+    <div style="font-size:12px;font-weight:600;color:#475569;margin-bottom:6px">📊 章节掌握度</div>
+    <div id="chapterHeatmap"></div>
+  </div>
   <div id="progressDetail"></div>
 </div>
 
@@ -452,6 +457,7 @@ function renderTab(type){
     });
     html += '<button class="btn btn-outline btn-block" style="margin-top:10px" onclick="goTab(\'quiz\')">📝 去刷题</button></div>';
     $('progressDetail').innerHTML = html;
+    renderChapterHeatmap();
   }
 }
 
@@ -979,6 +985,129 @@ function exitWrong(mode){
   }
   renderTab(mode);
 }
+
+// ===== 背诵乱序 =====
+var shuffleOn = false;
+window.toggleShuffle = function(){
+  shuffleOn = !shuffleOn;
+  document.getElementById("shuffleChk").checked = shuffleOn;
+  state.r = 0;
+  renderTab("recite");
+  toast(shuffleOn ? "乱序模式" : "顺序模式");
+};
+var __getListR = getListR;
+getListR = function(){
+  var list = __getListR();
+  if(shuffleOn && list.length > 1){
+    for(var i=list.length-1;i>0;i--){
+      var j=Math.floor(Math.random()*(i+1));
+      var t=list[i];list[i]=list[j];list[j]=t;
+    }
+  }
+  return list;
+};
+
+// ===== 番茄钟 =====
+var pomoActive=false,pomoSeconds=25*60,pomoTimer=null;
+window.togglePomodoro = function(){
+  if(pomoActive){ stopPomodoro(); return; }
+  startPomodoro();
+};
+function startPomodoro(){
+  pomoActive=true;pomoSeconds=25*60;
+  document.getElementById("pomodoroBar").style.display="block";
+  document.getElementById("pomoBtn").style.fontWeight="600";
+  updatePomoDisplay();
+  pomoTimer=setInterval(function(){
+    pomoSeconds--;
+    updatePomoDisplay();
+    if(pomoSeconds<=0){ stopPomodoro(); toast("\uD83C\uDF45 25分钟到！"); }
+  },1000);
+}
+function stopPomodoro(){
+  pomoActive=false;
+  if(pomoTimer){clearInterval(pomoTimer);pomoTimer=null;}
+  document.getElementById("pomodoroBar").style.display="none";
+  document.getElementById("pomoBtn").style.fontWeight="normal";
+}
+function updatePomoDisplay(){
+  var m=Math.floor(pomoSeconds/60),s=pomoSeconds%60;
+  document.getElementById("pomoTime").textContent=m+":"+(s<10?"0":"")+s;
+}
+
+// ===== 错题歼灭 =====
+window.eliminateWrong = function(mode){
+  var list=mode==="quiz"?DATA.quiz:DATA.exam;
+  var hkey=mode==="quiz"?"qh":"eh";
+  var wl=[];
+  for(var i=0;i<list.length;i++){
+    var h=getH(hkey,list[i].id);
+    if(h.wrong>0&&(!h.eliminated||h.eliminated<3)) wl.push(i);
+  }
+  if(!wl.length){toast("没有待歼灭的错题!");return;}
+  if(mode==="quiz"){state._em=true;state._ec=wl;state._oq=state.qs;state.qs="__elim__";state.q=0;}
+  else{state._em=true;state._ec=wl;state._oe=state.es;state.es="__elim__";state.e=0;}
+  renderTab(mode);
+  toast("\u2694\uFE0F 歼灭模式: "+wl.length+"题");
+};
+var __pickQ = window.pickQuiz;
+window.pickQuiz = function(el,idx){
+  if(state._em){
+    var item=DATA.quiz[state._ec[state.q]];
+    if(idx===item.answer){
+      var h=getH("qh",item.id);
+      h.eliminated=(h.eliminated||0)+1;
+      toast(h.eliminated>=3?"\uD83D\uDC80 歼灭!":"\u2705 还需"+(3-h.eliminated)+"次");
+    }
+  }
+  __pickQ(el,idx);
+};
+var __pickE = window.pickExam;
+window.pickExam = function(el,idx){
+  if(state._em){
+    var item=DATA.exam[state._ec[state.e]];
+    if(idx===item.answer){
+      var h=getH("eh",item.id);
+      h.eliminated=(h.eliminated||0)+1;
+      toast(h.eliminated>=3?"\uD83D\uDC80 歼灭!":"\u2705 还需"+(3-h.eliminated)+"次");
+    }
+  }
+  __pickE(el,idx);
+};
+var __getList = getList;
+getList = function(type){
+  if(type==="recite") return getListR();
+  if(type==="quiz"&&state.qs==="__elim__") return state._ec.map(function(i){return DATA.quiz[i];});
+  if(type==="exam"&&state.es==="__elim__") return state._ec.map(function(i){return DATA.exam[i];});
+  return __getList(type);
+};
+
+// ===== 章节薄弱度热力图 =====
+function renderChapterHeatmap(){
+  var el=document.getElementById("chapterHeatmap");
+  if(!el) return;
+  var ch={};
+  DATA.recite.forEach(function(c){
+    var s=c.sec||"未知";
+    if(!ch[s]) ch[s]={total:0,mastered:0};
+    ch[s].total++;
+    if(getH("rh",c.id).status==="easy") ch[s].mastered++;
+  });
+  var html="";
+  Object.keys(ch).sort().forEach(function(sec){
+    var c=ch[sec],pct=c.total?Math.round(c.mastered/c.total*100):0;
+    var color=pct>=80?"#059669":(pct>=50?"#d97706":"#dc2626");
+    var emoji=pct>=80?"\uD83D\uDFE2":(pct>=50?"\uD83D\uDFE1":"\uD83D\uDD34");
+    html+="<div style=\"display:flex;align-items:center;margin-bottom:4px;font-size:11px\">";
+    html+="<span style=\"width:18px;text-align:center\">"+emoji+"</span>";
+    html+="<span style=\"flex:1;color:#475569\">"+sec+"</span>";
+    html+="<span style=\"width:36px;text-align:right;font-weight:600;color:"+color+"\">"+pct+"%</span>";
+    html+="<span style=\"width:72px;margin-left:4px\"><div style=\"height:4px;background:#e2e8f0;border-radius:2px;overflow:hidden\"><div style=\"height:100%;width:"+pct+"%;background:"+color+";border-radius:2px\"></div></div></span>";
+    html+="</div>";
+  });
+  el.innerHTML=html;
+}
+
 
 // === 滑动手势 ===
 var swipeStartX = 0;
