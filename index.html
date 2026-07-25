@@ -923,15 +923,6 @@ function updateDailyPlan(){
   }
   var totalGoal = reciteGoal + quizGoal + examGoal;
   var pct = Math.min(100, Math.round(todayDone/totalGoal*100));
-  // 更新UI
-  var dpR = $('dpRecite'), dpQ = $('dpQuiz'), dpE = $('dpExam');
-  var dpBar = $('dpBar'), dpDone = $('dpDone'), dpTotal = $('dpTotal');
-  if(dpR) dpR.textContent = reciteDone;
-  if(dpQ) dpQ.textContent = quizDone;
-  if(dpE) dpE.textContent = examDone;
-  if(dpBar) dpBar.style.width = pct+'%';
-  if(dpDone) dpDone.textContent = todayDone;
-  if(dpTotal) dpTotal.textContent = totalGoal;
   // 表头倒计时
   var cd = $('cdText');
   if(cd) cd.textContent = '⏳ 还剩 '+daysLeft+' 天 · 今日 '+Math.round(pct)+'%';
