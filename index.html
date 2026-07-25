@@ -334,7 +334,7 @@ function getList(type){
   return sec==='all' ? data : data.filter(function(d){return d.sec===sec;});
 }
 window.setSec = function(type, sec){
-  if(type==='recite'){ state.rs=sec; state.r=0; }
+  if(type==='recite'){ state.rs=sec; state.r=0; _shuffledCache = null; }
   else if(type==='quiz'){ state.qs=sec; state.q=0; }
   else { state.es=sec; state.e=0; }
   saveState();
@@ -930,6 +930,7 @@ var filterUnmastered = false;
 window.toggleUnmastered = function(){
   filterUnmastered = !filterUnmastered;
   document.getElementById('unmasteredChk').checked = filterUnmastered;
+  _shuffledCache = null;
   state.r = 0;
   renderTab('recite');
 };
@@ -996,19 +997,39 @@ var shuffleOn = false;
 window.toggleShuffle = function(){
   shuffleOn = !shuffleOn;
   document.getElementById("shuffleChk").checked = shuffleOn;
+  _shuffledCache = null;
   state.r = 0;
   renderTab("recite");
   toast(shuffleOn ? "乱序模式" : "顺序模式");
 };
 var __getListR = getListR;
+var _shuffledCache = null;
+var _shuffleKey = '';
 getListR = function(){
   var list = __getListR();
   if(shuffleOn && list.length > 1){
-    for(var i=list.length-1;i>0;i--){
-      var j=Math.floor(Math.random()*(i+1));
-      var t=list[i];list[i]=list[j];list[j]=t;
+    // 缓存乱序结果，key=当前节+过滤状态，只在切换时重新洗牌
+    var key = state.rs + '|' + (filterUnmastered?'1':'0');
+    if(_shuffledCache && _shuffleKey === key && _shuffledCache.length === list.length){
+      // 验证缓存中的ID还在当前列表中
+      var valid = true;
+      var ids = {};
+      for(var i=0;i<list.length;i++) ids[list[i].id] = true;
+      for(var i=0;i<_shuffledCache.length;i++){
+        if(!ids[_shuffledCache[i].id]){ valid = false; break; }
+      }
+      if(valid) return _shuffledCache;
     }
+    // 重新生成乱序
+    _shuffledCache = list.slice();
+    for(var i=_shuffledCache.length-1;i>0;i--){
+      var j=Math.floor(Math.random()*(i+1));
+      var t=_shuffledCache[i];_shuffledCache[i]=_shuffledCache[j];_shuffledCache[j]=t;
+    }
+    _shuffleKey = key;
+    return _shuffledCache;
   }
+  _shuffledCache = null;
   return list;
 };
 
