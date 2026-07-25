@@ -99,25 +99,56 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;b
 </div>
 
 <div class="panel" id="panel-recite">
-  <div class="stats-bar" id="reciteStats"></div>
-  <div class="sec-row" id="reciteSec"></div>
-  <div class="card" id="reciteCard">
-    <div class="meta"><span class="tag" id="reciteTag">-</span><span id="reciteIdx">0/0</span></div>
-    <div class="q" id="reciteQ">-</div>
-    <div class="a" id="reciteA">-</div>
+  <!-- 顶部进度条 -->
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+    <span style="font-size:11px;color:#718096;font-weight:500" id="reciteSectionLabel">全部章节</span>
+    <div style="display:flex;align-items:center;gap:6px">
+      <div style="width:120px;height:6px;background:#e2e8f0;border-radius:3px;overflow:hidden">
+        <div id="reciteBar" style="height:100%;background:linear-gradient(90deg,#2b6cb0,#48bb78);transition:width .3s;width:0%"></div>
+      </div>
+      <span style="font-size:13px;font-weight:700;color:#2b6cb0;min-width:50px;text-align:right" id="reciteCount">0/0</span>
+    </div>
   </div>
-  <div class="actions">
-    <button class="btn btn-outline" onclick="goRecite(-1)">←</button>
-    <button class="btn btn-primary" onclick="flipAnswer()" id="ansBtn">👁 看答案</button>
-    <button class="btn btn-outline" onclick="goRecite(1)">→</button>
+
+  <!-- 章节筛选 -->
+  <div class="sec-row" id="reciteSec" style="margin-bottom:6px"></div>
+
+  <!-- 主卡片：点击翻答案 -->
+  <div id="reciteCard" style="background:#fff;border-radius:16px;box-shadow:0 2px 16px rgba(0,0,0,.08);padding:24px 20px 20px;min-height:260px;position:relative;cursor:pointer;user-select:none;overflow:hidden" onclick="flipAnswer()">
+    <!-- 角标 -->
+    <div style="position:absolute;top:12px;left:14px;right:14px;display:flex;justify-content:space-between;align-items:center">
+      <span style="font-size:11px;background:#ebf4ff;color:#2b6cb0;padding:2px 8px;border-radius:4px;font-weight:500" id="reciteTag">-</span>
+      <span style="font-size:11px;color:#a0aec0" id="reciteSub">-</span>
+    </div>
+    <!-- 问题区 -->
+    <div style="padding-top:28px">
+      <div style="font-size:13px;color:#a0aec0;margin-bottom:6px">📖 问题</div>
+      <div style="font-size:17px;line-height:1.7;font-weight:600;color:#1a202c" id="reciteQ">-</div>
+    </div>
+    <!-- 答案区（默认隐藏） -->
+    <div id="reciteAnswerArea" style="display:none;margin-top:16px;padding-top:16px;border-top:2px dashed #e2e8f0">
+      <div style="font-size:13px;color:#38a169;margin-bottom:6px">✅ 答案</div>
+      <div style="font-size:15px;line-height:1.7;color:#222" id="reciteA">-</div>
+    </div>
+    <!-- 未翻开提示 -->
+    <div id="reciteTapHint" style="text-align:center;margin-top:32px;color:#a0aec0;font-size:13px">👆 点击卡片查看答案</div>
   </div>
-  <div class="actions">
-    <button class="btn btn-sm btn-outline" onclick="markR('hard')">😣 不熟</button>
-    <button class="btn btn-sm btn-outline" onclick="markR('ok')">🙂 还行</button>
-    <button class="btn btn-sm btn-success" onclick="markR('easy')">😎 记住了</button>
+
+  <!-- 翻答案后出现的操作栏 -->
+  <div id="reciteActions" style="display:none;margin-top:12px">
+    <div style="font-size:13px;color:#718096;text-align:center;margin-bottom:8px">你记住了吗？</div>
+    <div style="display:flex;gap:10px">
+      <button style="flex:1;padding:14px 8px;border:none;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer;background:#fff5f5;color:#e53e3e;border:2px solid #fed7d7" onclick="markR('hard')">😣 不熟</button>
+      <button style="flex:1;padding:14px 8px;border:none;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer;background:#fffff0;color:#d69e2e;border:2px solid #fefcbf" onclick="markR('ok')">🤔 还行</button>
+      <button style="flex:1;padding:14px 8px;border:none;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer;background:#f0fff4;color:#38a169;border:2px solid #c6f6d5" onclick="markR('easy')">✅ 记住了</button>
+    </div>
   </div>
-  <div class="progress-bar"><div class="progress-fill" id="reciteBar" style="width:0%"></div></div>
-  <div class="progress-text" id="reciteBarText"></div>
+
+  <!-- 翻页 -->
+  <div style="display:flex;gap:8px;margin-top:10px">
+    <button class="btn btn-outline btn-sm" onclick="goRecite(-1)" style="flex:1">← 上一题</button>
+    <button class="btn btn-outline btn-sm" onclick="goRecite(1)" style="flex:1">下一题 →</button>
+  </div>
 </div>
 
 <div class="panel" id="panel-quiz">
@@ -256,20 +287,30 @@ function renderTab(type){
     var list = getList('recite');
     var done = 0;
     for(var k in state.rh) if(state.rh[k].status==='easy') done++;
-    $('reciteStats').innerHTML = '<div class="stat-card"><div class="num">'+list.length+'</div><div class="lbl">总题</div></div><div class="stat-card"><div class="num good">'+done+'</div><div class="lbl">已记</div></div><div class="stat-card"><div class="num">'+(list.length-done)+'</div><div class="lbl">待背</div></div>';
-    if(!list.length){ $('reciteQ').textContent='暂无内容'; $('reciteA').textContent=''; $('reciteIdx').textContent='0/0'; return; }
+    // 进度条
+    var secName = state.rs==='all' ? '全部章节' : (state.rs||'全部章节');
+    $('reciteSectionLabel').textContent = secName;
+    if(!list.length){
+      $('reciteQ').textContent='暂无内容';
+      $('reciteA').textContent='';
+      $('reciteCount').textContent='0/0';
+      $('reciteBar').style.width='0%';
+      return;
+    }
     var i = Math.min(state.r, list.length-1);
     state.r = i;
     var item = list[i];
-    $('reciteTag').textContent = (item.sec||'') + (item.sub?' · '+item.sub:'');
-    $('reciteIdx').textContent = (i+1)+'/'+list.length;
+    $('reciteTag').textContent = (item.sec||'');
+    $('reciteSub').textContent = (item.sub||'');
+    $('reciteCount').textContent = (i+1)+'/'+list.length;
     $('reciteQ').textContent = item.q;
     $('reciteA').textContent = item.a;
-    $('reciteA').classList.remove('show');
-    $('ansBtn').textContent = '👁 看答案';
+    // 每次翻到新题：隐藏答案+操作栏+显示提示
+    $('reciteAnswerArea').style.display = 'none';
+    $('reciteActions').style.display = 'none';
+    $('reciteTapHint').style.display = 'block';
     var pct = list.length ? ((i+1)/list.length*100) : 0;
     $('reciteBar').style.width = pct+'%';
-    $('reciteBarText').textContent = '第'+(i+1)+'/'+list.length+'题 · 已记'+done;
   }
   else if(type==='quiz'){
     showSec('quizSec','quiz');
@@ -356,9 +397,17 @@ function renderTab(type){
 }
 
 window.flipAnswer = function(){
-  var a = $('reciteA');
-  a.classList.toggle('show');
-  $('ansBtn').textContent = a.classList.contains('show') ? '🙈 隐藏' : '👁 看答案';
+  var area = $('reciteAnswerArea');
+  var actions = $('reciteActions');
+  var hint = $('reciteTapHint');
+  if(!area) return;
+  if(area.style.display === 'none'){
+    area.style.display = 'block';
+    actions.style.display = 'block';
+    hint.style.display = 'none';
+    // 滚动到可见
+    area.scrollIntoView({behavior:'smooth',block:'center'});
+  }
 };
 window.goRecite = function(d){
   var list = getList('recite');
@@ -371,8 +420,21 @@ window.markR = function(status){
   var item = list[state.r];
   if(!item) return;
   setH('rh', item.id, {status:status, last:Date.now()});
-  renderTab('recite');
-  if(status==='easy') setTimeout(function(){window.goRecite(1);}, 200);
+  // 自动折叠答案区
+  var area = $('reciteAnswerArea');
+  var actions = $('reciteActions');
+  if(area) area.style.display = 'none';
+  if(actions) actions.style.display = 'none';
+  // 记住了 → 自动跳到下一题
+  if(status==='easy'){ goRecite(1); return; }
+  // 不熟/还行 → 先刷新进度条再停留
+  var list2 = getList('recite');
+  var done = 0;
+  for(var k in state.rh) if(state.rh[k].status==='easy') done++;
+  var pct = list2.length ? ((state.r+1)/list2.length*100) : 0;
+  $('reciteBar').style.width = pct+'%';
+  $('reciteCount').textContent = (state.r+1)+'/'+list2.length;
+  toast(status==='hard' ? '标记：不熟' : '标记：还行');
 };
 window.goQuiz = function(d){
   var list = getList('quiz');
