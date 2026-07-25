@@ -189,6 +189,8 @@ function setHistory(type,id,d){state[type].history[id]={...getHistory(type,id),.
 
 // ===== LOAD DATA =====
 async function loadData(){
+  // 显示加载状态
+  let statusEl=document.getElementById('speedQ');
   try{
     let [q,e,r1,r2]=await Promise.all([
       fetch('quiz.json?'+Date.now()).then(r=>r.json()),
@@ -197,7 +199,12 @@ async function loadData(){
       fetch('recite2.json?'+Date.now()).then(r=>r.json())
     ]);
     allData.recite=[...(r1||[]),...(r2||[])];allData.quiz=q||[];allData.exam=e||[]
-  }catch(x){try{let r=await fetch('data.json?'+Date.now());let j=await r.json();allData.recite=j.recite||[];allData.quiz=j.quiz||[];allData.exam=j.exam||[]}catch(y){allData.recite=INLINE_DATA.recite||[];allData.quiz=INLINE_DATA.quiz||[];allData.exam=INLINE_DATA.exam||[]}}
+    if(statusEl)statusEl.textContent='数据已加载! 点击"开始新一轮"'
+  }catch(x){
+    // 用内联数据
+    allData.recite=INLINE_DATA.recite||[];allData.quiz=INLINE_DATA.quiz||[];allData.exam=INLINE_DATA.exam||[]
+    if(statusEl)statusEl.textContent='已加载'+allData.recite.length+'条背诵,'+allData.quiz.length+'题刷题'
+  }
   applyFilter('recite');applyFilter('quiz');applyFilter('exam');renderAll()
 }
 
@@ -205,10 +212,13 @@ function getSections(type){let s=new Set();(allData[type]||[]).forEach(d=>{if(d.
 function applyFilter(type){let sec=state[type].section,all=allData[type]||[];state[type].list=sec==='all'?all:all.filter(d=>d.sec===sec);if(state[type].idx>=state[type].list.length)state[type].idx=0}
 
 function renderAll(){
-  renderReciteSections();renderRecite();
-  renderQuizSections();renderQuiz();
-  renderExamSections();renderExam();
-  renderProgress();
+  try{renderReciteSections();}catch(e){}
+  try{renderRecite();}catch(e){}
+  try{renderQuizSections();}catch(e){}
+  try{renderQuiz();}catch(e){}
+  try{renderExamSections();}catch(e){}
+  try{renderExam();}catch(e){}
+  try{renderProgress();}catch(e){}
   saveState()
 }
 
