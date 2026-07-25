@@ -1739,10 +1739,8 @@ window.examMark = function(){
     // 弹出评分对话框
     var q = examQuestions[examCurrent];
     var html = '<div style="font-size:12px;margin-bottom:6px">对照答案自评得分(满分20分):</div>';
-    html += '<div style="font-size:11px;color:#64748b;margin-bottom:8px;white-space:pre-wrap">参考答案:
-';
-    for(var i=0;i<q.points.length;i++) html += (i+1)+'. '+q.points[i]+'
-';
+    html += '<div style="font-size:11px;color:#64748b;margin-bottom:8px;white-space:pre-wrap">参考答案:\n';
+    for(var i=0;i<q.points.length;i++) html += (i+1)+'. '+q.points[i]+'\n';
     html += '</div>';
     html += '<input type="number" id="caseScoreInput" min="0" max="20" value="'+examAnswers[examCurrent].score+'" style="width:80px;padding:6px;border:1px solid #e2e8f0;border-radius:6px;font-size:16px;text-align:center"> /20分';
     html += '<div style="margin-top:8px"><button class="btn btn-primary btn-sm" onclick="saveCaseScore()" style="width:100%">确认</button></div>';
