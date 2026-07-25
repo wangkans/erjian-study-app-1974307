@@ -106,12 +106,19 @@ body.dark .daily-plan .big-num{color:#94a3b8}
 <body>
 
 <div class="header">
-  <h1>📚 二建备考题库 <span style="float:right;cursor:pointer;font-size:14px;opacity:.85;display:flex;gap:6px"><span onclick="togglePomodoro()" id="pomoBtn" style="cursor:pointer">🍅</span><span onclick="toggleDark()" id="darkBtn" style="cursor:pointer">🌙</span></span></h1>
+  <h1><span onclick="toggleSearch()" style="cursor:pointer">📚 二建备考题库</span> <span style="float:right;cursor:pointer;font-size:14px;opacity:.85;display:flex;gap:6px"><span onclick="togglePomodoro()" id="pomoBtn" style="cursor:pointer">🍅</span><span onclick="toggleDark()" id="darkBtn" style="cursor:pointer">🌙</span></span></h1>
   <div class="sub" id="subDate">加载中...</div>
   <div class="cd" id="cdText">⏳ 加载中</div>
 </div>
   <div id="pomodoroBar" style="display:none;text-align:center;background:#fef2f2;padding:4px;font-size:11px;font-weight:600;color:#dc2626;border-bottom:1px solid #fecaca">🍅 专注 <span id="pomoTime">25:00</span> · <span onclick="togglePomodoro()" style="cursor:pointer;text-decoration:underline">停止</span></div>
 
+<div id="searchBar" style="display:none;padding:8px 12px;background:#fff;border-bottom:1px solid #e2e8f0">
+  <div style="display:flex;gap:6px">
+    <input id="searchInput" type="text" placeholder="搜索知识点..." style="flex:1;padding:8px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;outline:none" oninput="doSearch()" onkeydown="if(event.key==='Enter')doSearch()">
+    <button class="btn btn-sm btn-outline" onclick="closeSearch()" style="flex:0 0 auto">✕</button>
+  </div>
+  <div id="searchResults" style="max-height:300px;overflow-y:auto;margin-top:6px;font-size:12px"></div>
+</div>
 <div class="tabs">
   <div class="tab active" data-tab="speed" onclick="goTab('speed')"><span class="em">⚡</span>冲刺</div>
   <div class="tab" data-tab="recite" onclick="goTab('recite')"><span class="em">📖</span>背诵</div>
@@ -176,6 +183,7 @@ body.dark .daily-plan .big-num{color:#94a3b8}
 
   <!-- 主卡片：点击翻答案 -->
   <div id="reciteCard" style="background:#fff;border-radius:16px;box-shadow:0 2px 16px rgba(0,0,0,.08);padding:24px 20px 20px;min-height:260px;position:relative;cursor:pointer;user-select:none;overflow:hidden;touch-action:pan-y" onclick="flipAnswer()" ontouchstart="swipeStart(event)" ontouchend="swipeEnd(event)">
+    <span onclick="event.stopPropagation();speakCard()" style="position:absolute;top:12px;right:12px;font-size:18px;cursor:pointer;z-index:5;opacity:.7" title="朗读">🔊</span>
     <div class="swipe-hint left" id="swipeLeft">👈 不熟</div>
     <div class="swipe-hint right" id="swipeRight">记住了 👉</div>
     <!-- 角标 -->
@@ -463,6 +471,7 @@ function renderTab(type){
     html += '<button class="btn btn-outline btn-block" style="margin-top:10px" onclick="goTab(\'quiz\')">📝 去刷题</button></div>';
     $('progressDetail').innerHTML = html;
     renderChapterHeatmap();
+    renderStudyStats();
   }
 }
 
@@ -1107,6 +1116,149 @@ getList = function(type){
   if(type==="exam"&&state.es==="__elim__") return state._ec.map(function(i){return DATA.exam[i];});
   return __getList(type);
 };
+
+
+// ===== 语音朗读 =====
+window.speakCard = function(){
+  if(!window.speechSynthesis){ toast("浏览器不支持语音"); return; }
+  window.speechSynthesis.cancel();
+  var q = document.getElementById("reciteQ");
+  var a = document.getElementById("reciteA");
+  var area = document.getElementById("reciteAnswerArea");
+  var text = q ? q.textContent : "";
+  if(area && area.style.display !== "none" && a){
+    text += "。答案：" + a.textContent;
+  }
+  var u = new SpeechSynthesisUtterance(text);
+  u.lang = "zh-CN";
+  u.rate = 0.9;
+  window.speechSynthesis.speak(u);
+  toast("🔊 朗读中...");
+};
+
+// ===== 全局搜索 =====
+window.toggleSearch = function(){
+  var bar = document.getElementById("searchBar");
+  var inp = document.getElementById("searchInput");
+  if(bar.style.display === "none"){
+    bar.style.display = "block";
+    if(inp) setTimeout(function(){inp.focus();}, 100);
+  } else {
+    closeSearch();
+  }
+};
+window.closeSearch = function(){
+  document.getElementById("searchBar").style.display = "none";
+  document.getElementById("searchResults").innerHTML = "";
+  document.getElementById("searchInput").value = "";
+};
+window.doSearch = function(){
+  var q = document.getElementById("searchInput").value.trim().toLowerCase();
+  var el = document.getElementById("searchResults");
+  if(!q || q.length < 2){ el.innerHTML = ""; return; }
+  var results = [];
+  DATA.recite.forEach(function(c){
+    if((c.q||"").toLowerCase().indexOf(q)>=0 || (c.a||"").toLowerCase().indexOf(q)>=0){
+      results.push({type:"背诵", sec:c.sec||"", q:c.q, a:c.a, id:c.id});
+    }
+  });
+  DATA.quiz.forEach(function(c){
+    if((c.q||"").toLowerCase().indexOf(q)>=0) results.push({type:"刷题", sec:c.sec||"", q:c.q, id:c.id});
+  });
+  DATA.exam.forEach(function(c){
+    if((c.q||"").toLowerCase().indexOf(q)>=0) results.push({type:"真题", sec:c.sec||"", q:c.q, id:c.id});
+  });
+  if(!results.length){ el.innerHTML = "<div style=\"color:#94a3b8;text-align:center;padding:12px\">未找到相关题目</div>"; return; }
+  var h = "";
+  for(var i=0;i<Math.min(results.length,20);i++){
+    var r = results[i];
+    h += "<div style=\"padding:6px 0;border-bottom:1px solid #f1f5f9;cursor:pointer\" onclick=\"goToResult('"+r.type+"','"+r.id+"')\">";
+    h += "<span style=\"font-size:10px;background:#f1f5f9;color:#64748b;padding:1px 5px;border-radius:3px;margin-right:4px\">"+r.type+"</span>";
+    h += "<span style=\"font-size:10px;color:#94a3b8\">"+r.sec+"</span><br>";
+    h += "<span style=\"color:#475569\">"+r.q.substring(0,80)+"</span>";
+    h += "</div>";
+  }
+  if(results.length > 20) h += "<div style=\"text-align:center;color:#94a3b8;padding:4px\">仅显示前20条，请输入更精确关键词</div>";
+  el.innerHTML = h;
+};
+window.goToResult = function(type, id){
+  closeSearch();
+  if(type === "背诵"){
+    goTab("recite");
+    var list = getListR ? getListR() : getList("recite");
+    for(var i=0;i<list.length;i++){ if(list[i].id===id){ state.r=i; renderTab("recite"); break; } }
+  } else if(type === "刷题"){
+    goTab("quiz");
+    var list = getList("quiz");
+    for(var i=0;i<list.length;i++){ if(list[i].id===id){ state.q=i; renderTab("quiz"); break; } }
+  } else if(type === "真题"){
+    goTab("exam");
+    var list = getList("exam");
+    for(var i=0;i<list.length;i++){ if(list[i].id===id){ state.e=i; renderTab("exam"); break; } }
+  }
+};
+
+// ===== 学习统计 =====
+function renderStudyStats(){
+  var el = document.createElement("div");
+  el.style.cssText = "background:#fff;border-radius:10px;border:1px solid #e2e8f0;padding:12px;margin-bottom:8px";
+  // 收集历史数据
+  var history = [];
+  try{
+    var raw = localStorage.getItem("ejian_history");
+    if(raw) history = JSON.parse(raw);
+  }catch(e){}
+  // 今日统计
+  var today = new Date().toDateString();
+  var todayRecite=0, todayQuiz=0, todayExam=0, todayCorrect=0, todayTotal=0;
+  for(var k in state.rh){ if(state.rh[k].last && new Date(state.rh[k].last).toDateString()===today) todayRecite++; }
+  for(var k in state.qh){
+    var h = state.qh[k];
+    if(h.last && new Date(h.last).toDateString()===today){ todayQuiz++; todayTotal++; if(!h.wrong) todayCorrect++; }
+  }
+  for(var k in state.eh){
+    var h = state.eh[k];
+    if(h.last && new Date(h.last).toDateString()===today){ todayExam++; todayTotal++; if(!h.wrong) todayCorrect++; }
+  }
+  var accuracy = todayTotal ? Math.round(todayCorrect/todayTotal*100) : 0;
+  
+  var html = "<div style=\"font-size:12px;font-weight:600;color:#475569;margin-bottom:8px\">📈 学习统计</div>";
+  html += "<div style=\"display:flex;gap:8px;margin-bottom:8px\">";
+  html += "<div style=\"flex:1;text-align:center\"><div style=\"font-size:20px;font-weight:700;color:#475569\">"+todayRecite+"</div><div style=\"font-size:9px;color:#94a3b8\">今日背诵</div></div>";
+  html += "<div style=\"flex:1;text-align:center\"><div style=\"font-size:20px;font-weight:700;color:#475569\">"+todayQuiz+"</div><div style=\"font-size:9px;color:#94a3b8\">今日刷题</div></div>";
+  html += "<div style=\"flex:1;text-align:center\"><div style=\"font-size:20px;font-weight:700;color:#475569\">"+todayExam+"</div><div style=\"font-size:9px;color:#94a3b8\">今日真题</div></div>";
+  html += "<div style=\"flex:1;text-align:center\"><div style=\"font-size:20px;font-weight:700;color:"+(accuracy>=70?"#059669":"#d97706")+"\">"+accuracy+"%</div><div style=\"font-size:9px;color:#94a3b8\">正确率</div></div>";
+  html += "</div>";
+  // 总进度
+  var totalCards = DATA.recite.length + DATA.quiz.length + DATA.exam.length;
+  var recited = 0;
+  for(var k in state.rh){ if(state.rh[k].status==="easy") recited++; }
+  html += "<div style=\"font-size:10px;color:#64748b;margin-top:4px\">总进度: 背诵已记"+recited+"/"+DATA.recite.length+" · 刷题已答"+(function(){var c=0;for(var k in state.qh)if(state.qh[k].last)c++;return c;})()+"/"+DATA.quiz.length+"</div>";
+  
+  el.innerHTML = html;
+  var progressDetail = document.getElementById("progressDetail");
+  if(progressDetail) progressDetail.parentNode.insertBefore(el, progressDetail);
+}
+
+// ===== 学习时长追踪 =====
+var sessionStart = Date.now();
+setInterval(function(){
+  if(document.hidden) return;
+  var elapsed = Math.floor((Date.now() - sessionStart)/1000);
+  if(elapsed > 0 && elapsed % 300 === 0){ // 每5分钟保存一次
+    try{
+      var h = JSON.parse(localStorage.getItem("ejian_history")||"[]");
+      var today = new Date().toDateString();
+      var found = false;
+      for(var i=0;i<h.length;i++){
+        if(h[i].date === today){ h[i].minutes = Math.floor((Date.now()-sessionStart)/60000); found=true; break; }
+      }
+      if(!found) h.push({date:today, minutes:Math.floor((Date.now()-sessionStart)/60000)});
+      if(h.length > 30) h.shift();
+      localStorage.setItem("ejian_history", JSON.stringify(h));
+    }catch(e){}
+  }
+}, 60000);
 
 // ===== 章节薄弱度热力图 =====
 function renderChapterHeatmap(){
