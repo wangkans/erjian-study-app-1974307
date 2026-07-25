@@ -147,14 +147,16 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;b
 <div class="toast" id="toast"></div>
 
 <script>
-window.DATA = {"recite":[],"quiz":[],"exam":[]};
-</script>
-
-<script>
+// 数据：直接读取内联数据(由下方<script>注入到 window.DATA)
 (function(){
 'use strict';
-// 数据：直接读取内联数据(由前一个<script>注入)
-var DATA = window.DATA || {recite:[],quiz:[],exam:[]};
+// 等待数据就绪 - 用setTimeout 0轮询直到window.DATA非空
+function waitForData(){
+  if(window.DATA && window.DATA.recite && window.DATA.recite.length>0){
+    return true;
+  }
+  return false;
+}
 var db = 'ejian_v3';
 var state = {r:0,rs:'all',rh:{},q:0,qs:'all',qh:{},e:0,es:'all',eh:{}};
 var timer = null;
@@ -550,10 +552,34 @@ function init(){
 }
 
 if(document.readyState === 'loading'){
-  document.addEventListener('DOMContentLoaded', init);
+  document.addEventListener('DOMContentLoaded', function(){
+    if(window.DATA && window.DATA.recite && window.DATA.recite.length>0){
+      init();
+    } else {
+      // 数据script还没执行完, 轮询等待
+      var w = setInterval(function(){
+        if(window.DATA && window.DATA.recite && window.DATA.recite.length>0){
+          clearInterval(w);
+          init();
+        }
+      }, 20);
+      // 5秒超时保护
+      setTimeout(function(){ clearInterval(w); if(!window._inited) init(); }, 5000);
+    }
+  });
 } else {
-  init();
+  if(window.DATA && window.DATA.recite && window.DATA.recite.length>0){
+    init();
+  } else {
+    var w = setInterval(function(){
+      if(window.DATA && window.DATA.recite && window.DATA.recite.length>0){
+        clearInterval(w);
+        init();
+      }
+    }, 20);
+  }
 }
+window._inited = true;
 
 })();
 </script>
