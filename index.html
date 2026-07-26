@@ -606,7 +606,37 @@ function submitMulti(){
   for(var i=0;i<window.Q.sel.length;i++){if(q.answer.indexOf(window.Q.sel[i])<0)chs[window.Q.sel[i]].classList.add('wrong');}
   toast(correct?'✅ 全对!':'❌ 有错误');
 }
-function navQ(d){window.Q.idx=Math.max(0,Math.min(getList(window.DATA.quiz,window.Q.sec).length-1,window.Q.idx+d));save();renderQuiz();}
+function navQ(d){
+  var list = getList(window.DATA.quiz, window.Q.sec);
+  // 如果是向前(下一题), 跳过已答对的
+  if(d > 0){
+    var startIdx = window.Q.idx;
+    var newIdx = startIdx + 1;
+    var skipped = 0;
+    while(newIdx < list.length){
+      var h = window.Q.hist[list[newIdx].id];
+      var wrong = h && h.wrong; // 错题不算答过
+      if(!h || wrong){
+        // 找到第一个未答/错题
+        break;
+      }
+      newIdx++;
+      skipped++;
+    }
+    if(newIdx >= list.length){
+      // 全部答过, 重置从头开始
+      newIdx = 0;
+      if(window.R && confirm('所有题都已答过, 是否重置?')){
+        window.Q.hist = {};
+        save();
+      }
+    }
+    window.Q.idx = Math.min(list.length-1, newIdx);
+  } else {
+    window.Q.idx = Math.max(0, window.Q.idx - 1);
+  }
+  save();renderQuiz();
+}
 
 // ============ 真题 ============
 function renderExam(){
@@ -632,7 +662,29 @@ function renderExam(){
 }
 function pickE(j){pickQuizLike(j,'E');}
 function submitMultiE(){submitMultiLike('E');}
-function navE(d){window.E.idx=Math.max(0,Math.min(getList(window.DATA.exam,window.E.sec).length-1,window.E.idx+d));save();renderExam();}
+function navE(d){
+  var list = getList(window.DATA.exam, window.E.sec);
+  if(d > 0){
+    var newIdx = window.E.idx + 1;
+    while(newIdx < list.length){
+      var h = window.E.hist[list[newIdx].id];
+      var wrong = h && h.wrong;
+      if(!h || wrong) break;
+      newIdx++;
+    }
+    if(newIdx >= list.length){
+      newIdx = 0;
+      if(window.R && confirm('所有题都已答过, 是否重置?')){
+        window.E.hist = {};
+        save();
+      }
+    }
+    window.E.idx = Math.min(list.length-1, newIdx);
+  } else {
+    window.E.idx = Math.max(0, window.E.idx - 1);
+  }
+  save();renderExam();
+}
 function pickQuizLike(j,key){
   var data=key==='E'?window.DATA.exam:window.DATA.quiz;
   var state=key==='E'?window.E:window.Q;
@@ -963,12 +1015,26 @@ function updateDaily(){
   var passed=13-left;var phase=passed<7?'背诵阶段':'真题冲刺';
   $('phaseLabel').textContent=phase;
   
-  // 进度统计
+  // 今日答题数: 按今日时间过滤
+  var todayKey = today.toDateString();
   var rD=0,qD=0,eD=0,cD=0;
-  for(var k in window.R.hist){if(window.R.hist[k].status==='easy')rD++;}
-  for(var k in window.Q.hist){if(window.Q.hist[k].time)qD++;}
-  for(var k in window.E.hist){if(window.E.hist[k].time)eD++;}
-  for(var k in window.C.hist){if(window.C.hist[k].time)cD++;}
+  // 背诵: 今日时间戳的"记住了"
+  for(var k in window.R.hist){
+    var h = window.R.hist[k];
+    if(h.status==='easy' && h.time && new Date(h.time).toDateString()===todayKey) rD++;
+  }
+  for(var k in window.Q.hist){
+    var h = window.Q.hist[k];
+    if(h.time && new Date(h.time).toDateString()===todayKey) qD++;
+  }
+  for(var k in window.E.hist){
+    var h = window.E.hist[k];
+    if(h.time && new Date(h.time).toDateString()===todayKey) eD++;
+  }
+  for(var k in window.C.hist){
+    var h = window.C.hist[k];
+    if(h.time && new Date(h.time).toDateString()===todayKey) cD++;
+  }
   $('dpR').textContent=rD;$('dpQ').textContent=qD;$('dpE').textContent=eD;$('dpC').textContent=cD;
   
   var rT=window.DATA.recite.length,qT=window.DATA.quiz.length,eT=window.DATA.exam.length,cT=(window.DATA.case||[]).length;
