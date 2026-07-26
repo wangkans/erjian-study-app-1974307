@@ -73,6 +73,65 @@ body.dark .btn-outline{background:#1e293b;border-color:#334155;color:#cbd5e1}
 </head>
 <body>
 
+<!-- 强制诊断条: 永远显示,不依赖任何JS -->
+<div id="diag" style="position:fixed;top:0;left:0;right:0;z-index:99999;background:#fbbf24;color:#000;padding:6px 10px;font-size:11px;font-family:monospace;border-bottom:2px solid #dc2626;display:flex;justify-content:space-between;align-items:center">
+  <span>📊 <span id="diag-data">加载中...</span></span>
+  <span>
+    <a href="javascript:clearAll()" style="color:#dc2626;font-weight:700;text-decoration:underline;margin-right:8px">🗑️清缓存</a>
+    <a href="javascript:location.reload(true)" style="color:#1e293b;font-weight:700;text-decoration:underline">🔄刷新</a>
+  </span>
+</div>
+<div style="height:32px"></div>
+
+<script>
+// 立刻执行, 不等任何东西
+function clearAll(){
+  try{
+    if(navigator.serviceWorker){
+      navigator.serviceWorker.getRegistrations().then(function(rs){
+        for(var i=0;i<rs.length;i++) rs[i].unregister();
+      });
+    }
+    if(window.caches){
+      caches.keys().then(function(ks){
+        for(var i=0;i<ks.length;i++) caches.delete(ks[i]);
+      });
+    }
+    localStorage.clear();
+  }catch(e){}
+  setTimeout(function(){location.reload(true);}, 500);
+}
+
+// 立刻显示当前DATA状态
+setTimeout(function(){
+  var d = (window.DATA && window.DATA.recite) ? window.DATA.recite.length : 0;
+  var q = (window.DATA && window.DATA.quiz) ? window.DATA.quiz.length : 0;
+  var e = (window.DATA && window.DATA.exam) ? window.DATA.exam.length : 0;
+  var c = (window.DATA && window.DATA.case) ? window.DATA.case.length : 0;
+  var el = document.getElementById('diag-data');
+  if(d > 0){
+    el.textContent = 'DATA OK: ' + d + '背诵 ' + q + '刷题 ' + e + '真题 ' + c + '案例';
+    el.parentElement.parentElement.style.background = '#86efac';
+  } else {
+    el.textContent = '❌ DATA未加载 (尝试点清缓存)';
+    el.parentElement.parentElement.style.background = '#fca5a5';
+  }
+}, 200);
+
+// 每2秒更新
+setInterval(function(){
+  var d = (window.DATA && window.DATA.recite) ? window.DATA.recite.length : 0;
+  var el = document.getElementById('diag-data');
+  if(el && d > 0 && el.textContent.indexOf('DATA OK') < 0){
+    var q = (window.DATA && window.DATA.quiz) ? window.DATA.quiz.length : 0;
+    var e = (window.DATA && window.DATA.exam) ? window.DATA.exam.length : 0;
+    var c = (window.DATA && window.DATA.case) ? window.DATA.case.length : 0;
+    el.textContent = 'DATA OK: ' + d + '背诵 ' + q + '刷题 ' + e + '真题 ' + c + '案例';
+    el.parentElement.parentElement.style.background = '#86efac';
+  }
+}, 2000);
+</script>
+
 <div id="debugBar" style="background:#fef3c7;padding:4px 8px;font-size:10px;color:#92400e;font-family:monospace;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #fde68a">
   <span id="debugStatus">⏳ 检测中...</span>
   <span onclick="location.href=location.href.split('?')[0]+'?cb='+Date.now()" style="cursor:pointer;text-decoration:underline">🔄 强制刷新</span>
