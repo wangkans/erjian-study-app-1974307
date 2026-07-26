@@ -451,6 +451,10 @@ window.goTab = function(name){
 
 // 渲染
 function renderTab(type){
+  if(!window.DATA || !window.DATA.recite || !window.DATA.recite.length){
+    var sd = document.getElementById('subDate');
+    if(sd) sd.textContent = 'NO_DATA: ' + typeof window.DATA + ' r=' + (window.DATA&&window.DATA.recite?window.DATA.recite.length:'?');
+  }
   if(type==='recite'){
     showSec('reciteSec','recite');
     var list = getList('recite');
@@ -1887,6 +1891,11 @@ document.addEventListener('touchmove', function(e){
 
 
 window.init = function(){
+  // 强制可见标记: 如果init运行了, subDate会改变
+  var sd = document.getElementById('subDate');
+  if(sd) sd.textContent = 'init running...';
+  var ct = document.getElementById('cdText');
+  if(ct) ct.textContent = '🚀';
   try{
     var d = new Date();
     $('subDate').textContent = '截止 2026.08.07 · ' + d.toLocaleDateString('zh-CN');
@@ -1910,7 +1919,13 @@ window.DATA = {"recite":[{"id":"r0001","q":"微倾水准仪的使用步骤是什
 {"id":"c002","sec":"2026水利-案例2","scenario":"某水库枢纽工程总库容0.8×10⁸m³，水电站装机容量60MW。以灌溉、供水为主，兼有发电功能。","question":"根据《水利水电工程等级划分及洪水标准》(SL252-2017)，判断该工程的工程等别、工程规模。","points":["总库容0.8×10⁸m³→0.1~1.0亿→Ⅲ等","装机60MW→<300MW→对应Ⅲ等","工程等别为Ⅲ等","工程规模为中型","总库容和装机取高者→Ⅲ等","水库库容为主要指标"]},
 {"id":"c003","sec":"2026水利-案例3","scenario":"某水闸工程施工，闸底板混凝土C30W6F100，底板厚1.5m，夏季施工气温28-35℃。","question":"1.大体积混凝土温控措施有哪些？\n2.浇筑时如何避免冷缝？\n3.养护时间和方式？","points":["降低水化热(低热水泥)","预冷骨料、加冰拌合","通水冷却","表面保温","分层分块浇筑","控制入仓温度≤28℃","上层混凝土在底层初凝前浇筑","连续浇筑不间断","养护≥14天","保湿覆盖洒水或喷涂养护剂"]},
 {"id":"c004","sec":"2026水利-案例4","scenario":"某堤防工程施工，堤身填筑采用黏性土料，压实度要求≥93%。施工期遇到连续降雨。","question":"1.堤防填筑施工工序是什么？\n2.雨前、雨后应采取哪些措施？\n3.压实度检测方法有哪些？","points":["测量放样→基础清理→铺料→平料→洒水→碾压→质检","分层填筑，平行于堤轴线碾压","雨前压实表面、覆盖防雨布","做好排水设施","雨后检查含水率","调整含水率至最优±2%","环刀法或灌砂法检测压实度","压实度≥93%","检测频率符合规范","每层检测合格后方可铺上层"]}];
-init();
+try {
+  init();
+  if(document.getElementById('subDate')) document.getElementById('subDate').textContent += ' DONE';
+} catch(e) {
+  var sd = document.getElementById('subDate');
+  if(sd) sd.textContent = 'INIT_ERR: ' + (e.message||'').substring(0,40);
+}
 </script>
 
 <script>
