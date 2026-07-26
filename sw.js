@@ -1,5 +1,5 @@
 // Service Worker for 二建备考题库 PWA
-var CACHE = 'ejian-v1';
+var CACHE = 'ejian-v2';
 var URLS = ['/', '/index.html'];
 
 self.addEventListener('install', function(e) {
