@@ -920,10 +920,26 @@ window.DATA = {"recite":[{"id":"r0001","q":"微倾水准仪的使用步骤是什
 <script>
 // 注册SW
 if('serviceWorker' in navigator){
-  navigator.serviceWorker.register('/sw.js');
+  navigator.serviceWorker.register('/sw.js?v=2');
 }
-// 启动
-init();
+// 启动: 确保DATA就绪
+(function(){
+  var tries = 0;
+  function tryInit(){
+    tries++;
+    if(window.DATA && window.DATA.recite && window.DATA.recite.length){
+      init();
+    } else if(tries < 50){
+      setTimeout(tryInit, 100);
+    } else {
+      console.error('DATA never loaded');
+      // 强制给个空DATA让UI至少能渲染
+      window.DATA = {recite:[], quiz:[], exam:[], case:[]};
+      init();
+    }
+  }
+  tryInit();
+})();
 </script>
 
 <script>
