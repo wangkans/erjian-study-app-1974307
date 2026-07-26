@@ -206,6 +206,36 @@ body.dark .btn-outline{background:#1e293b;border-color:#334155;color:#cbd5e1}
 </div>
 
 <!-- 进度 -->
+<div class="panel" id="panel-exam_sim">
+  <div style="text-align:center;padding:16px 0" id="examSetup">
+    <div style="font-size:22px;margin-bottom:6px">🎯</div>
+    <div style="font-size:14px;font-weight:600;color:#475569;margin-bottom:10px">模拟考试</div>
+    <div style="display:flex;flex-direction:column;gap:5px;max-width:260px;margin:0 auto">
+      <button class="btn btn-outline btn-block" onclick="startSim('法规',80,120)" style="padding:11px">📜 法规 · 80题 · 120分钟</button>
+      <button class="btn btn-outline btn-block" onclick="startSim('管理',80,120)" style="padding:11px">📊 管理 · 80题 · 120分钟</button>
+      <button class="btn btn-outline btn-block" onclick="startSim('水利选择',30,60)" style="padding:11px">💧 水利选择 · 30题 · 60分钟</button>
+      <button class="btn btn-outline btn-block" onclick="startSim('案例',4,80)" style="padding:11px">📋 水利案例 · 4题 · 80分钟</button>
+    </div>
+  </div>
+  <div id="examRun" style="display:none">
+    <div style="display:flex;justify-content:space-between;background:#fef2f2;padding:6px 10px;border-radius:6px;margin-bottom:8px;border:1px solid #fecaca">
+      <span style="font-size:11px;font-weight:600;color:#dc2626" id="simTitle">-</span>
+      <span style="font-size:18px;font-weight:900;color:#dc2626" id="simTimer">--:--</span>
+    </div>
+    <div style="font-size:10px;color:#94a3b8;margin-bottom:4px">第 <span id="simIdx">1</span>/<span id="simTotal">0</span> 题</div>
+    <div class="card">
+      <div style="font-size:14px;line-height:1.7;font-weight:500;margin-bottom:10px" id="simQ">-</div>
+      <div class="choices" id="simChoices"></div>
+    </div>
+    <div class="actions">
+      <button class="btn btn-outline btn-sm" onclick="simNav(-1)">←</button>
+      <button class="btn btn-outline btn-sm" onclick="simNav(1)">→</button>
+    </div>
+    <button class="btn btn-danger btn-block" onclick="simSubmit()" style="margin-top:10px">📤 交卷</button>
+  </div>
+  <div id="examResult" style="display:none;text-align:center;padding:16px"></div>
+</div>
+
 <div class="panel" id="panel-progress">
   <div class="stats-bar" id="progressStats"></div>
   <div class="card">
