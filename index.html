@@ -74,10 +74,11 @@ body.dark .btn-outline{background:#1e293b;border-color:#334155;color:#cbd5e1}
 <body>
 
 <div class="header">
-  <h1>📚 二建备考题库 <span onclick="toggleDark()" id="darkBtn" style="float:right;cursor:pointer;font-size:14px">🌙</span></h1>
+  <h1>📚 二建备考题库 <span style="float:right;display:flex;gap:6px"><span onclick="togglePomo()" id="pomoBtn" style="cursor:pointer;font-size:14px">🍅</span><span onclick="toggleDark()" id="darkBtn" style="cursor:pointer;font-size:14px">🌙</span></span></h1>
   <div class="sub" id="subDate">加载中...</div>
   <div class="cd" id="cdText">⏳ 加载中</div>
 </div>
+<div id="pomoBar" style="display:none;text-align:center;background:#fef2f2;padding:3px;font-size:11px;font-weight:600;color:#dc2626;border-bottom:1px solid #fecaca">🍅 专注 · <span id="pomoTime">25:00</span> · <span onclick="togglePomo()" style="cursor:pointer;text-decoration:underline">停止</span></div>
 
 <div class="tabs" id="tabs">
   <div class="tab active" onclick="switchTab('recite')"><span class="em">📖</span>背诵</div>
@@ -109,6 +110,11 @@ body.dark .btn-outline{background:#1e293b;border-color:#334155;color:#cbd5e1}
     <span style="font-size:13px;font-weight:700;color:#475569" id="reciteCount">0/0</span>
   </div>
   <div class="sec-row" id="reciteSec"></div>
+  <div style="display:flex;gap:8px;justify-content:flex-end;margin-bottom:4px;font-size:10px">
+    <label style="cursor:pointer;color:#64748b"><input type="checkbox" id="chkUnmastered" onchange="toggleUnmastered()"> 未掌握</label>
+    <label style="cursor:pointer;color:#64748b"><input type="checkbox" id="chkShuffle" onchange="toggleShuffle()"> 乱序</label>
+    <span onclick="speakCard()" style="cursor:pointer;color:#64748b">🔊</span>
+  </div>
   <div class="card" style="min-height:200px;cursor:pointer" onclick="flipR()" id="reciteCard">
     <div style="font-size:11px;color:#94a3b8;margin-bottom:4px">📖 问题</div>
     <div style="font-size:15px;line-height:1.7;font-weight:500" id="reciteQ">-</div>
@@ -137,6 +143,7 @@ body.dark .btn-outline{background:#1e293b;border-color:#334155;color:#cbd5e1}
 <div class="panel" id="panel-quiz">
   <div class="stats-bar" id="quizStats"></div>
   <div class="sec-row" id="quizSec"></div>
+  <div style="margin-bottom:4px"><button class="btn btn-sm btn-outline" onclick="retryWrong('quiz')" style="font-size:10px;padding:3px 8px">🔁 错题重练</button></div>
   <div class="card">
     <div style="font-size:11px;color:#94a3b8;margin-bottom:6px" id="quizLabel">-</div>
     <div style="font-size:14px;line-height:1.7;font-weight:500;margin-bottom:12px" id="quizQ">-</div>
@@ -155,6 +162,7 @@ body.dark .btn-outline{background:#1e293b;border-color:#334155;color:#cbd5e1}
 <div class="panel" id="panel-exam">
   <div class="stats-bar" id="examStats"></div>
   <div class="sec-row" id="examSec"></div>
+  <div style="margin-bottom:4px"><button class="btn btn-sm btn-outline" onclick="retryWrong('exam')" style="font-size:10px;padding:3px 8px">🔁 错题重练</button></div>
   <div class="card">
     <div style="font-size:11px;color:#94a3b8;margin-bottom:6px" id="examLabel">-</div>
     <div style="font-size:14px;line-height:1.7;font-weight:500;margin-bottom:12px" id="examQ">-</div>
@@ -256,11 +264,12 @@ function renderSec(panelId, data, stateKey){
   el.innerHTML=h;
 }
 function setSec(key, sec){
-  if(key==='recite'){window.R.sec=sec;window.R.idx=0;}
+  if(key==='recite'){window.R.sec=sec;window.R.idx=0;_shuffleCache=null;}
   else if(key==='quiz'){window.Q.sec=sec;window.Q.idx=0;}
   else{window.E.sec=sec;window.E.idx=0;}
   save();
   renderAll();
+  updateDaily();
 }
 
 // ============ 背诵 ============
@@ -498,6 +507,7 @@ function renderProgress(){
   var total=rT+qT+eT+cT;
   var done=rD+qD+eD+cD;
   $('totalBar').style.width=(done/total*100)+'%';
+  renderAchieve();renderCal();
   $('progressSummary').textContent='总计完成 '+done+'/'+total+' · 背诵已记'+rD+' · 刷题已答'+qD+' · 真题已答'+eD+' · 案例已做'+cD;
 }
 
@@ -580,6 +590,262 @@ function toggleDark(){
 }
 try{if(localStorage.getItem('dark')==='1'){document.body.classList.add('dark');setTimeout(function(){$('darkBtn')&&($('darkBtn').textContent='☀️');},100);}}catch(e){}
 
+
+// ===== 搜索 =====
+function toggleSearch(){
+  var bar=$('searchBar');
+  if(bar.style.display==='none'){bar.style.display='block';setTimeout(function(){$('searchInput').focus();},100);}
+  else closeSearch();
+}
+function closeSearch(){$('searchBar').style.display='none';$('searchResults').innerHTML='';$('searchInput').value='';}
+function doSearch(){
+  var q=$('searchInput').value.trim().toLowerCase();
+  if(q.length<2){$('searchResults').innerHTML='';return;}
+  var r=[];
+  window.DATA.recite.forEach(function(c){if((c.q+c.a).toLowerCase().indexOf(q)>=0)r.push({t:'背诵',s:c.sec,q:c.q,id:c.id});});
+  window.DATA.quiz.forEach(function(c){if(c.q.toLowerCase().indexOf(q)>=0)r.push({t:'刷题',s:c.sec,q:c.q,id:c.id});});
+  window.DATA.exam.forEach(function(c){if(c.q.toLowerCase().indexOf(q)>=0)r.push({t:'真题',s:c.sec,q:c.q,id:c.id});});
+  if(!r.length){$('searchResults').innerHTML='<div style="color:#94a3b8;text-align:center;padding:8px">未找到</div>';return;}
+  var h='';
+  for(var i=0;i<Math.min(r.length,15);i++){
+    h+='<div style="padding:4px 0;border-bottom:1px solid #f1f5f9;cursor:pointer" onclick="goResult("'+r[i].t+'","'+r[i].id+'")"><span style="font-size:9px;background:#f1f5f9;padding:1px 4px;border-radius:2px;margin-right:3px">'+r[i].t+'</span><span style="font-size:9px;color:#94a3b8">'+r[i].s+'</span><br>'+r[i].q.substring(0,70)+'</div>';
+  }
+  $('searchResults').innerHTML=h;
+}
+function goResult(type,id){
+  closeSearch();
+  if(type==='背诵'){switchTab('recite');var l=getList(window.DATA.recite,window.R.sec);for(var i=0;i<l.length;i++)if(l[i].id===id){window.R.idx=i;renderRecite();return;}}
+  else if(type==='刷题'){switchTab('quiz');var l=getList(window.DATA.quiz,window.Q.sec);for(var i=0;i<l.length;i++)if(l[i].id===id){window.Q.idx=i;renderQuiz();return;}}
+  else{switchTab('exam');var l=getList(window.DATA.exam,window.E.sec);for(var i=0;i<l.length;i++)if(l[i].id===id){window.E.idx=i;renderExam();return;}}
+}
+
+// ===== 语音 =====
+function speakCard(){
+  if(!window.speechSynthesis)return;
+  window.speechSynthesis.cancel();
+  var t=$('reciteQ').textContent;
+  if($('reciteA').style.display!=='none')t+='。答案：'+$('reciteAText').textContent;
+  var u=new SpeechSynthesisUtterance(t);u.lang='zh-CN';u.rate=0.9;
+  window.speechSynthesis.speak(u);
+}
+
+// ===== 乱序/未掌握 =====
+var shuffleOn=false, unmasteredOn=false, _shuffleCache=null, _shuffleKey='';
+function toggleShuffle(){shuffleOn=!shuffleOn;$('chkShuffle').checked=shuffleOn;_shuffleCache=null;window.R.idx=0;renderRecite();}
+function toggleUnmastered(){unmasteredOn=!unmasteredOn;$('chkUnmastered').checked=unmasteredOn;_shuffleCache=null;window.R.idx=0;renderRecite();}
+
+// 重写 getList for recite
+var _getListOrig=getList;
+getList=function(data,sec){
+  if(data===window.DATA.recite){
+    var l=_getListOrig(data,sec);
+    if(unmasteredOn) l=l.filter(function(c){var h=window.R.hist[c.id];return !h||h.status!=='easy';});
+    if(shuffleOn){
+      var key=sec+'|'+(unmasteredOn?'1':'0');
+      if(_shuffleCache&&_shuffleKey===key&&_shuffleCache.length===l.length){
+        var ids={};for(var i=0;i<l.length;i++)ids[l[i].id]=true;
+        var valid=true;
+        for(var i=0;i<_shuffleCache.length;i++){if(!ids[_shuffleCache[i].id]){valid=false;break;}}
+        if(valid) return _shuffleCache;
+      }
+      _shuffleCache=l.slice();
+      for(var i=_shuffleCache.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=_shuffleCache[i];_shuffleCache[i]=_shuffleCache[j];_shuffleCache[j]=t;}
+      _shuffleKey=key;
+      return _shuffleCache;
+    }
+    return l;
+  }
+  return _getListOrig(data,sec);
+};
+
+// ===== 错题重练 =====
+function retryWrong(mode){
+  var data=mode==='quiz'?window.DATA.quiz:window.DATA.exam;
+  var state=mode==='quiz'?window.Q:window.E;
+  var wrong=[];
+  for(var i=0;i<data.length;i++){
+    var h=state.hist[data[i].id];
+    if(h&&h.wrong) wrong.push(i);
+  }
+  if(!wrong.length){toast('没有错题!');return;}
+  state._orig=state.sec;state.sec='__wrong__';state._wrongIdx=wrong;state.idx=0;
+  if(mode==='quiz'){switchTab('quiz');renderQuiz();}
+  else{switchTab('exam');renderExam();}
+  toast('错题重练: '+wrong.length+'题');
+}
+// 扩展 getList for wrong
+var _getList2=getList;
+getList=function(data,sec){
+  if(sec==='__wrong__'){
+    if(data===window.DATA.quiz)return window.Q._wrongIdx.map(function(i){return data[i];});
+    if(data===window.DATA.exam)return window.E._wrongIdx.map(function(i){return data[i];});
+  }
+  if(data===window.DATA.recite) return _getList2(data,sec); // already handled above
+  return _getList2(data,sec);
+};
+
+// ===== 番茄钟 =====
+var pomoActive=false, pomoSec=1500, pomoTimer=null;
+function togglePomo(){
+  if(pomoActive){stopPomo();return;}
+  pomoActive=true;pomoSec=1500;
+  $('pomoBar').style.display='block';$('pomoBtn').style.fontWeight='600';
+  updatePomo();
+  pomoTimer=setInterval(function(){
+    pomoSec--;
+    updatePomo();
+    if(pomoSec<=0){stopPomo();toast('🍅 25分钟到!');}
+  },1000);
+}
+function stopPomo(){pomoActive=false;if(pomoTimer)clearInterval(pomoTimer);$('pomoBar').style.display='none';$('pomoBtn').style.fontWeight='normal';}
+function updatePomo(){var m=Math.floor(pomoSec/60),s=pomoSec%60;$('pomoTime').textContent=m+':'+(s<10?'0':'')+s;}
+
+// ===== 每日计划 =====
+function updateDaily(){
+  if(!window.DATA||!window.DATA.recite) return;
+  var today=new Date();var dl=new Date(2026,7,7);var left=Math.max(1,Math.ceil((dl-today)/86400000));
+  var passed=13-left;var phase=passed<7?'背诵阶段':'真题冲刺';
+  $('phaseLabel').textContent=phase;
+  
+  // 进度统计
+  var rD=0,qD=0,eD=0,cD=0;
+  for(var k in window.R.hist){if(window.R.hist[k].status==='easy')rD++;}
+  for(var k in window.Q.hist){if(window.Q.hist[k].time)qD++;}
+  for(var k in window.E.hist){if(window.E.hist[k].time)eD++;}
+  for(var k in window.C.hist){if(window.C.hist[k].time)cD++;}
+  $('dpR').textContent=rD;$('dpQ').textContent=qD;$('dpE').textContent=eD;$('dpC').textContent=cD;
+  
+  var rT=window.DATA.recite.length,qT=window.DATA.quiz.length,eT=window.DATA.exam.length,cT=(window.DATA.case||[]).length;
+  var totalD=rD+qD+eD+cD,totalT=rT+qT+eT+cT;
+  $('dpBar').style.width=(totalD/totalT*100)+'%';
+  
+  // 今日目标
+  var tR=Math.ceil((rT-rD)/left),tQ=Math.ceil((qT-qD)/left),tE=Math.ceil((eT-eD)/left);
+  $('dpTarget').textContent='今日目标: 背诵'+tR+'条 刷题'+tQ+'题 真题'+tE+'题';
+  
+  // 时长
+  var hist=[];try{hist=JSON.parse(localStorage.getItem('timeLog')||'[]');}catch(e){}
+  var mins=0;for(var i=0;i<hist.length;i++){if(hist[i].d===today.toDateString())mins=hist[i].m||0;}
+  $('timeWarn').textContent=mins<30?'⚠️ 今日背诵'+(mins||0)+'分钟，底线30分钟':'✅ 背诵已达标('+mins+'分钟)';
+  $('timeWarn').style.color=mins>=30?'#059669':'#dc2626';
+  
+  // 打卡
+  var streak=0;
+  for(var i=0;i<365;i++){var d=new Date(today);d.setDate(d.getDate()-i);var ds=d.toDateString();var f=hist.some(function(h){return h.d===ds;});if(f)streak++;else break;}
+  $('streakLabel').textContent=streak>0?'连续'+streak+'天':'';
+  
+  // 保存时长
+  var cur=Math.floor((Date.now()-sessionStart)/60000);
+  var found=false;
+  for(var i=0;i<hist.length;i++){if(hist[i].d===today.toDateString()){hist[i].m=Math.max(hist[i].m,cur);found=true;break;}}
+  if(!found)hist.push({d:today.toDateString(),m:cur});
+  if(hist.length>60)hist.shift();
+  try{localStorage.setItem('timeLog',JSON.stringify(hist));}catch(e){}
+}
+var sessionStart=Date.now();
+setInterval(updateDaily,60000);
+
+// ===== 成就 =====
+function renderAchieve(){
+  var rD=0;for(var k in window.R.hist){if(window.R.hist[k].status==='easy')rD++;}
+  var qD=0;for(var k in window.Q.hist){if(window.Q.hist[k].time)qD++;}
+  var icons=[];
+  if(rD>0)icons.push('📖');
+  if(rD>=50)icons.push('📚');if(rD>=100)icons.push('🧠');if(rD>=200)icons.push('💡');if(rD>=304)icons.push('🎓');
+  if(qD>=50)icons.push('📝');if(qD>=100)icons.push('✍️');
+  var today=new Date().toDateString();
+  var didAll=false;
+  for(var k in window.R.hist){if(window.R.hist[k].time&&new Date(window.R.hist[k].time).toDateString()===today)didAll=true;}
+  if(didAll)icons.push('🌟');
+  $('achievements').textContent=icons.join(' ');
+}
+
+// ===== 学习日历 =====
+function renderCal(){
+  var hist=[];try{hist=JSON.parse(localStorage.getItem('timeLog')||'[]');}catch(e){}
+  var map={};hist.forEach(function(h){map[h.d]=h.m;});
+  var today=new Date();var h='';
+  var dn=['日','一','二','三','四','五','六'];
+  for(var i=6;i>=0;i--){
+    var d=new Date(today);d.setDate(d.getDate()-i);var ds=d.toDateString();
+    var m=map[ds]||0;var c=m===0?'#f1f5f9':(m<30?'#c6f6d5':(m<60?'#68d391':'#059669'));
+    h+='<div style="text-align:center;width:30px"><div style="font-size:8px;color:#94a3b8">'+dn[d.getDay()]+'</div><div style="width:26px;height:26px;border-radius:4px;background:'+c+';margin:1px auto;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:600;color:'+(m>30?'#fff':'#64748b')+'">'+d.getDate()+'</div></div>';
+  }
+  $('studyCal').innerHTML=h;
+}
+
+// ===== 模考 =====
+var simQ=[], simA=[], simI=0, simSec=0, simTimer=null;
+function startSim(type,count,min){
+  var all=[];
+  if(type==='法规')all=window.DATA.quiz.filter(function(q){return q.sec==='2026-法规';});
+  else if(type==='管理')all=window.DATA.quiz.filter(function(q){return q.sec==='2026-管理';});
+  else if(type==='水利选择')all=window.DATA.exam;
+  else{all=window.DATA.case||[];startSimCase(all,min);return;}
+  simQ=all.slice(0,count);simA=new Array(simQ.length);simI=0;simSec=min*60;
+  $('examSetup').style.display='none';$('examRun').style.display='block';$('examResult').style.display='none';
+  $('simTitle').textContent=type+' · '+count+'题';
+  $('simTotal').textContent=simQ.length;
+  renderSimQ();
+  startSimTimer();
+  switchTab('exam_sim');
+}
+function startSimCase(cases,min){simQ=cases;simA=new Array(cases.length);simI=0;simSec=min*60;
+  $('examSetup').style.display='none';$('examRun').style.display='block';$('examResult').style.display='none';
+  $('simTitle').textContent='水利案例 · '+cases.length+'题';$('simTotal').textContent=cases.length;
+  renderSimCaseQ();startSimTimer();switchTab('exam_sim');
+}
+function renderSimQ(){
+  var q=simQ[simI];$('simIdx').textContent=simI+1;$('simQ').textContent=q.q;
+  var h='';var sel=simA[simI];
+  if(Array.isArray(q.answer)){
+    for(var j=0;j<q.choices.length;j++){h+='<div class="choice'+(sel&&sel.indexOf(j)>=0?' sel':'')+'" onclick="simPick('+j+')"><span class="pre">'+'ABCDEFGH'[j]+'.</span>'+q.choices[j]+'</div>';}
+  }else{
+    for(var j=0;j<q.choices.length;j++){h+='<div class="choice'+(sel===j?' sel':'')+'" onclick="simPick('+j+')"><span class="pre">'+'ABCDEFGH'[j]+'.</span>'+q.choices[j]+'</div>';}
+  }
+  $('simChoices').innerHTML=h;
+}
+function renderSimCaseQ(){
+  var q=simQ[simI];$('simIdx').textContent=simI+1;$('simQ').innerHTML='<div style="font-size:11px;color:#94a3b8">'+q.sec+'</div><div style="font-size:12px;margin:4px 0">'+q.scenario+'</div><div style="font-size:13px;font-weight:500">'+q.question+'</div>';
+  $('simChoices').innerHTML='<textarea id="simCaseInput" style="width:100%;min-height:80px;border:1px solid #e2e8f0;border-radius:6px;padding:6px;font-size:12px;font-family:inherit" placeholder="作答...">'+(simA[simI]||'')+'</textarea>';
+}
+function simPick(j){
+  var q=simQ[simI];
+  if(Array.isArray(q.answer)){
+    if(!simA[simI])simA[simI]=[];
+    var p=simA[simI].indexOf(j);if(p>=0)simA[simI].splice(p,1);else simA[simI].push(j);
+  }else{simA[simI]=j;}
+  renderSimQ();
+}
+function simNav(d){
+  if(simI+simQ.length-1>=simQ.length&&d>0)return;
+  if(simI<=0&&d<0)return;
+  if($('simCaseInput')){simA[simI]=$('simCaseInput').value;}
+  simI=Math.max(0,Math.min(simQ.length-1,simI+d));
+  var q=simQ[simI];
+  if(q.choices)renderSimQ();else renderSimCaseQ();
+}
+function simSubmit(){
+  if(simTimer)clearInterval(simTimer);
+  if($('simCaseInput')){simA[simI]=$('simCaseInput').value;}
+  $('examRun').style.display='none';$('examResult').style.display='block';
+  var correct=0,total=simQ.length;
+  for(var i=0;i<simQ.length;i++){
+    var q=simQ[i],a=simA[i];
+    if(q.choices){
+      if(Array.isArray(q.answer)){if(a&&q.answer.sort().join(',')===a.sort().join(','))correct++;}
+      else{if(a===q.answer)correct++;}
+    }
+  }
+  var pct=Math.round(correct/total*100);
+  $('examResult').innerHTML='<div style="font-size:36px;margin:12px 0">'+(pct>=60?'🎉':'😅')+'</div><div style="font-size:28px;font-weight:900;color:'+(pct>=60?'#059669':'#dc2626')+'">'+correct+'/'+total+'</div><div style="font-size:14px;color:#64748b">正确率 '+pct+'%</div><button class="btn btn-outline btn-sm" onclick="location.reload()" style="margin-top:12px">重来</button>';
+}
+function startSimTimer(){
+  updateSimTimer();
+  simTimer=setInterval(function(){simSec--;updateSimTimer();if(simSec<=0)simSubmit();},1000);
+}
+function updateSimTimer(){var m=Math.floor(simSec/60),s=simSec%60;$('simTimer').textContent=m+':'+(s<10?'0':'')+s;}
+
 function init(){
   var d=new Date();
   $('subDate').textContent='截止 2026.08.07 · '+d.toLocaleDateString('zh-CN');
@@ -587,6 +853,7 @@ function init(){
   $('cdText').textContent='⏳ 还剩 '+Math.ceil((dl-d)/86400000)+' 天';
   $('cdText').textContent+=' · 背诵'+window.DATA.recite.length+'刷题'+window.DATA.quiz.length+'真题'+window.DATA.exam.length;
   renderAll();
+  updateDaily();
 }
 </script>
 
