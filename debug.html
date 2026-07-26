@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>二建题库-诊断</title>
+</head>
+<body style="font-family:-apple-system,sans-serif;padding:16px;max-width:400px;margin:0 auto;background:#f1f5f9">
+<h1 style="font-size:18px;color:#475569">🔧 二建题库-诊断</h1>
+<p style="font-size:14px;color:#334155;line-height:1.6">
+状态: 检测中...
+</p>
+<div id="status" style="background:#fff;padding:12px;border-radius:8px;font-family:monospace;font-size:12px;line-height:1.8;border:1px solid #e2e8f0"></div>
+
+<h2 style="font-size:15px;color:#475569;margin-top:20px">📱 修复步骤</h2>
+<ol style="font-size:13px;color:#334155;line-height:1.8">
+  <li>如果上方显示"❌ DATA未加载"或数据为0</li>
+  <li>点击下方"完全清除并重新打开"</li>
+  <li>如果还不行,关闭浏览器重开</li>
+</ol>
+
+<a href="javascript:void(0)" onclick="fullReset()" style="display:block;text-align:center;background:#dc2626;color:#fff;padding:14px;border-radius:8px;text-decoration:none;font-weight:600;margin:16px 0">🗑️ 完全清除并重新打开</a>
+
+<a href="https://erjian-study-app-1974307.pages.dev/?cb=999" style="display:block;text-align:center;background:#475569;color:#fff;padding:14px;border-radius:8px;text-decoration:none;font-weight:600">🔗 尝试直接打开(带新时间戳)</a>
+
+<script>
+// 完全清除所有缓存
+async function fullReset(){
+  // 注销所有SW
+  if(navigator.serviceWorker){
+    try{
+      const regs = await navigator.serviceWorker.getRegistrations();
+      for(const r of regs) await r.unregister();
+    }catch(e){}
+  }
+  // 清所有缓存
+  if(window.caches){
+    try{
+      const keys = await caches.keys();
+      for(const k of keys) await caches.delete(k);
+    }catch(e){}
+  }
+  // 清localStorage
+  try{localStorage.clear();}catch(e){}
+  
+  // 显示状态
+  document.getElementById('status').innerHTML = '✅ 已清除所有缓存<br>正在跳转...';
+  
+  // 2秒后跳转
+  setTimeout(function(){
+    location.href = 'https://erjian-study-app-1974307.pages.dev/?cb=' + Date.now();
+  }, 1500);
+}
+
+// 诊断
+async function diagnose(){
+  const s = document.getElementById('status');
+  const lines = [];
+  
+  // 1. SW状态
+  if(navigator.serviceWorker){
+    try{
+      const regs = await navigator.serviceWorker.getRegistrations();
+      lines.push('SW注册: ' + (regs.length > 0 ? '⚠️ 已注册 ' + regs.length + '个(需清除)' : '✅ 未注册'));
+    }catch(e){ lines.push('SW检测: ' + e.message); }
+  } else {
+    lines.push('SW: 浏览器不支持');
+  }
+  
+  // 2. Cache状态
+  if(window.caches){
+    try{
+      const keys = await caches.keys();
+      lines.push('缓存: ' + (keys.length > 0 ? '⚠️ ' + keys.join(',') : '✅ 空'));
+    }catch(e){ lines.push('Cache: ' + e.message); }
+  }
+  
+  // 3. 网络
+  try{
+    const resp = await fetch('https://erjian-study-app-1974307.pages.dev/sw.js?cb=' + Date.now());
+    const text = await resp.text();
+    const v1 = text.includes("ejian-v1");
+    const v2 = text.includes("ejian-v2");
+    lines.push('云端SW: ' + (v1 ? '❌ v1' : v2 ? '✅ v2' : '❓'));
+  }catch(e){ lines.push('网络: ' + e.message); }
+  
+  s.innerHTML = lines.join('<br>');
+}
+diagnose();
+</script>
+</body>
+</html>
