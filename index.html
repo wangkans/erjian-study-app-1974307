@@ -291,6 +291,12 @@ function switchTab(name){
   for(var i=0;i<tabs.length;i++)tabs[i].classList.toggle('active',tabs[i].getAttribute('data-tab')===name);
   var panels=document.querySelectorAll('.panel');
   for(var i=0;i<panels.length;i++)panels[i].classList.toggle('active',panels[i].id==='panel-'+name);
+  // 切换时调用对应渲染
+  if(name==='recite'&&typeof renderRecite==='function')renderRecite();
+  else if(name==='quiz'&&typeof renderQuiz==='function')renderQuiz();
+  else if(name==='exam'&&typeof renderExam==='function')renderExam();
+  else if(name==='case'&&typeof renderCase==='function')renderCase();
+  else if(name==='progress'&&typeof renderProgress==='function')renderProgress();
 }
 
 // ============ 章节过滤 ============
