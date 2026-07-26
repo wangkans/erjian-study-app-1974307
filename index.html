@@ -472,7 +472,6 @@ function showHint(){
   var hints = kws.slice(0, Math.min(3, kws.length));
   $('recallHint').innerHTML = '💡 关键词提示: ' + hints.map(function(h){return '【'+h.charAt(0)+'】';}).join(' ');
   $('recallHint').style.display = 'block';
-  $('hintCount').textContent = '已使用提示';
 }
 
 function submitRecall(){
@@ -530,9 +529,6 @@ function getNextReview(grade){
   return now + 3600000; // 默认1小时
 }
 
-  $('reciteHint').style.display='none';
-  $('reciteBtns').style.display='block';
-}
 function navR(d){
   var list = getList(window.DATA.recite, window.R.sec);
   var now = Date.now();
