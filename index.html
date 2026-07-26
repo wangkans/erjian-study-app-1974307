@@ -919,9 +919,13 @@ window.DATA = {"recite":[{"id":"r0001","q":"微倾水准仪的使用步骤是什
 
 <script>
 // 注册SW
-if('serviceWorker' in navigator){
-  navigator.serviceWorker.register('/sw.js?v=2');
+// SW临时禁用, 数据未加载时显示重试按钮
+function retryLoad(){
+  location.href = location.href.split('?')[0] + '?cb=' + Date.now();
 }
+// if('serviceWorker' in navigator){
+//   navigator.serviceWorker.register('/sw.js?v=2');
+// }
 // 启动: 确保DATA就绪
 (function(){
   var tries = 0;
@@ -933,9 +937,11 @@ if('serviceWorker' in navigator){
       setTimeout(tryInit, 100);
     } else {
       console.error('DATA never loaded');
-      // 强制给个空DATA让UI至少能渲染
-      window.DATA = {recite:[], quiz:[], exam:[], case:[]};
-      init();
+      // 显示重试界面
+      var cd = document.getElementById('cdText');
+      if(cd) cd.innerHTML = '<button onclick="retryLoad()" style="padding:8px 16px;background:#dc2626;color:#fff;border:none;border-radius:6px;font-weight:600;cursor:pointer">🔄 数据未加载，点击重试</button>';
+      var sd = document.getElementById('subDate');
+      if(sd) sd.textContent = '缓存异常，请点击右上角刷新';
     }
   }
   tryInit();
