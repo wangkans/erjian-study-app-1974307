@@ -197,14 +197,37 @@ setInterval(function(){
     <label style="cursor:pointer;color:#64748b"><input type="checkbox" id="chkShuffle" onchange="toggleShuffle()"> 乱序</label>
     <span onclick="speakCard()" style="cursor:pointer;color:#64748b">🔊</span>
   </div>
-  <div class="card" style="min-height:200px;cursor:pointer" onclick="flipR()" id="reciteCard">
-    <div style="font-size:11px;color:#94a3b8;margin-bottom:4px">📖 问题</div>
+  <div class="card" style="min-height:200px" id="reciteCard">
+    <div style="font-size:11px;color:#94a3b8;margin-bottom:4px">📖 问题 · 💡先自己想，再看答案</div>
     <div style="font-size:15px;line-height:1.7;font-weight:500" id="reciteQ">-</div>
+
+    <!-- 主动回忆框 -->
+    <div id="recallBox" style="margin-top:14px;padding:10px;background:#fffbeb;border:1px solid #fde68a;border-radius:8px">
+      <div style="font-size:10px;color:#92400e;margin-bottom:4px">🧠 主动回忆：用关键词写下你的答案（5秒）</div>
+      <textarea id="recallInput" placeholder="例如：安置、粗平、调焦..." style="width:100%;min-height:50px;border:1px solid #fde68a;border-radius:6px;padding:6px;font-size:12px;font-family:inherit;background:#fff;outline:none;resize:vertical"></textarea>
+      <div style="display:flex;gap:4px;margin-top:6px">
+        <button class="btn btn-sm btn-primary" onclick="submitRecall()" style="flex:1">🤔 我答完了</button>
+        <button class="btn btn-sm btn-outline" onclick="showHint()" style="flex:0 0 auto">💡提示</button>
+      </div>
+      <div id="recallHint" style="display:none;margin-top:6px;padding:6px;background:#fef3c7;border-radius:4px;font-size:11px;color:#78350f"></div>
+      <div id="recallScore" style="display:none;margin-top:6px;font-size:11px"></div>
+    </div>
+
+    <!-- 答案 -->
     <div id="reciteA" style="display:none;margin-top:12px;padding-top:12px;border-top:1px dashed #cbd5e1">
-      <div style="font-size:11px;color:#059669;margin-bottom:4px">✅ 答案</div>
+      <div style="font-size:11px;color:#059669;margin-bottom:4px">✅ 标准答案</div>
       <div style="font-size:14px;line-height:1.6" id="reciteAText">-</div>
     </div>
-    <div id="reciteHint" style="text-align:center;margin-top:24px;color:#94a3b8;font-size:12px">👆 点击查看答案</div>
+
+    <!-- 评估按钮 -->
+    <div id="reciteBtns" style="display:none;margin-top:10px">
+      <div style="text-align:center;font-size:12px;color:#64748b;margin-bottom:6px">这次回忆效果如何？</div>
+      <div class="actions">
+        <button class="btn btn-outline" onclick="rateR('hard')" style="color:#dc2626">😣 没想起 <small>(10分钟后)</small></button>
+        <button class="btn btn-outline" onclick="rateR('ok')" style="color:#d97706">🤔 部分想起 <small>(6小时后)</small></button>
+        <button class="btn btn-success" onclick="rateR('easy')">😎 完全记住 <small>(明天)</small></button>
+      </div>
+    </div>
   </div>
   <div id="reciteBtns" style="display:none;margin-top:10px">
     <div style="text-align:center;font-size:12px;color:#64748b;margin-bottom:6px">记住了吗？</div>
@@ -412,30 +435,126 @@ function setSec(key, sec){
 function renderRecite(){
   var list=getList(window.DATA.recite,window.R.sec);
   if(!list.length){$('reciteQ').textContent='暂无内容';return;}
-  var i=Math.min(window.R.idx,list.length-1);window.R.idx=i;
-  var c=list[i];
+  // 间隔复习: 优先显示到期的卡片
+  var now = Date.now();
+  var dueList = list.filter(function(c){
+    var h = window.R.hist[c.id];
+    if(!h || !h.nextReview) return true; // 从未背诵
+    return h.nextReview <= now; // 到期了
+  });
+  var showList = dueList.length > 0 ? dueList : list;
+  if(showList !== list){
+    $('reciteCount').textContent = (window.R.idx+1) + '/' + showList.length + ' · 📅间隔复习';
+  } else {
+    $('reciteCount').textContent = (window.R.idx+1) + '/' + list.length;
+  }
+  var i = Math.min(window.R.idx, showList.length-1);
+  window.R.idx = i;
+  var c = showList[i];
+  if(!c){renderRecite();return;}
   $('reciteLabel').textContent=window.R.sec==='all'?'全部章节':window.R.sec;
-  $('reciteCount').textContent=(i+1)+'/'+list.length;
   $('reciteQ').textContent=c.q;
   $('reciteAText').textContent=c.a;
+  // 重置主动回忆状态
+  $('recallInput').value = '';
+  $('recallHint').style.display = 'none';
+  $('recallScore').style.display = 'none';
+  $('recallBox').style.display = 'block';
   $('reciteA').style.display='none';
-  $('reciteHint').style.display='block';
   $('reciteBtns').style.display='none';
-  $('reciteBar').style.width=(i+1)/list.length*100+'%';
+  $('reciteBar').style.width=(i+1)/showList.length*100+'%';
 }
-function flipR(){
-  $('reciteA').style.display='block';
+function showHint(){
+  var c = getList(window.DATA.recite, window.R.sec)[window.R.idx];
+  if(!c || !c.a) return;
+  // 提取关键词
+  var kws = c.a.replace(/[，。、；,.\s]+/g, ' ').split(' ').filter(function(w){return w.length>=2;});
+  var hints = kws.slice(0, Math.min(3, kws.length));
+  $('recallHint').innerHTML = '💡 关键词提示: ' + hints.map(function(h){return '【'+h.charAt(0)+'】';}).join(' ');
+  $('recallHint').style.display = 'block';
+  $('hintCount').textContent = '已使用提示';
+}
+
+function submitRecall(){
+  var c = getList(window.DATA.recite, window.R.sec)[window.R.idx];
+  if(!c) return;
+  var userAnswer = ($('recallInput').value || '').trim().toLowerCase();
+  if(!userAnswer){
+    toast('请先写下你的答案');
+    return;
+  }
+  // 关键词匹配: 把答案拆词, 计算覆盖率
+  var ansWords = c.a.replace(/[，。、；,.\s、\(\)（），.。]+/g, ' ').split(' ').filter(function(w){return w.length>=2;});
+  if(!ansWords.length){
+    // 没关键词, 直接显示答案
+    showAnswer();
+    return;
+  }
+  var matched = 0;
+  var matchedWords = [];
+  for(var i=0;i<ansWords.length;i++){
+    var w = ansWords[i].toLowerCase();
+    // 短词要求精确匹配, 长词允许包含
+    if(userAnswer.indexOf(w) >= 0 || (w.length>=4 && userAnswer.indexOf(w.substring(0,3)) >= 0)){
+      matched++;
+      matchedWords.push(ansWords[i]);
+    }
+  }
+  var pct = Math.round(matched/ansWords.length*100);
+  var color = pct>=70 ? '#059669' : (pct>=40 ? '#d97706' : '#dc2626');
+  var grade = pct>=70 ? '优秀' : (pct>=40 ? '及格' : '需加强');
+  $('recallScore').innerHTML = '<div style="padding:6px;background:'+(pct>=70?'#dcfce7':(pct>=40?'#fef3c7':'#fee2e2'))+';border-radius:4px;color:'+color+';font-weight:600">📊 关键词命中 '+matched+'/'+ansWords.length+' ('+pct+'%) · '+grade+'</div>'+(matchedWords.length ? '<div style="font-size:10px;color:#64748b;margin-top:3px">命中: '+matchedWords.join('、')+'</div>' : '');
+  $('recallScore').style.display = 'block';
+
+  // 记录本次回忆得分
+  window.R._lastRecall = pct;
+
+  // 显示答案
+  showAnswer();
+}
+
+function showAnswer(){
+  $('reciteA').style.display = 'block';
+  $('recallBox').style.display = 'none';
+  $('reciteBtns').style.display = 'block';
+}
+
+function flipR(){} // 兼容旧调用
+
+// 间隔重复: 根据等级排下次复习时间
+function getNextReview(grade){
+  var now = Date.now();
+  if(grade === 'easy') return now + 86400000;  // 24小时后
+  if(grade === 'ok') return now + 6*3600000;    // 6小时后
+  if(grade === 'hard') return now + 10*60000;   // 10分钟后
+  return now + 3600000; // 默认1小时
+}
+
   $('reciteHint').style.display='none';
   $('reciteBtns').style.display='block';
 }
-function navR(d){window.R.idx=Math.max(0,Math.min(getList(window.DATA.recite,window.R.sec).length-1,window.R.idx+d));save();renderRecite();}
+function navR(d){
+  var list = getList(window.DATA.recite, window.R.sec);
+  var now = Date.now();
+  var due = list.filter(function(c){var h=window.R.hist[c.id];return !h || !h.nextReview || h.nextReview<=now;});
+  if(!due.length) due = list;
+  var newIdx = Math.max(0, Math.min(due.length-1, window.R._navIdx!==undefined ? window.R._navIdx+d : window.R.idx+d));
+  window.R._navIdx = newIdx;
+  window.R.idx = newIdx;
+  save();renderRecite();
+}
 function rateR(status){
   var c=getList(window.DATA.recite,window.R.sec)[window.R.idx];
-  window.R.hist[c.id]={status:status,time:Date.now()};
+  if(!c) return;
+  // 间隔重复: 计算下次复习时间
+  var nextReview = getNextReview(status);
+  window.R.hist[c.id]={status:status, time:Date.now(), nextReview:nextReview, recall:window.R._lastRecall||0};
   save();
+  window.R._lastRecall = 0;
   if(status==='easy'){navR(1);return;}
   renderRecite();renderProgress();
-  toast(status==='hard'?'标记: 不熟':'标记: 还行');
+  var intervals = {'hard':'10分钟', 'ok':'6小时', 'easy':'明天'};
+  toast('已记录 · 下次复习: '+intervals[status]);
 }
 
 // ============ 刷题 ============
