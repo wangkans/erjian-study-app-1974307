@@ -50,12 +50,31 @@ body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif;backg
 .progress-fill{height:100%;transition:width .3s;background:#475569}
 .toast{position:fixed;bottom:100px;left:50%;transform:translateX(-50%);background:rgba(30,41,59,.92);color:#f1f5f9;padding:8px 16px;border-radius:8px;font-size:12px;z-index:999;display:none;max-width:90%}
 .tip{font-size:10px;color:#d97706;background:#fffbeb;padding:5px 8px;border-radius:6px;margin-top:6px}
+
+body.dark{background:#0f172a;color:#cbd5e1}
+body.dark .header{background:#020617}
+body.dark .tabs{background:#1e293b;border-color:#334155}
+body.dark .tab{color:#64748b}
+body.dark .tab.active{color:#94a3b8;border-color:#64748b}
+body.dark .card{background:#1e293b;border-color:#334155;color:#cbd5e1}
+body.dark .stat-card{background:#1e293b;border-color:#334155}
+body.dark .choice{background:#1e293b;border-color:#334155;color:#cbd5e1}
+body.dark .choice.sel{background:#1e3a5f;border-color:#64748b}
+body.dark .choice.correct{background:#064e3b;border-color:#059669}
+body.dark .choice.wrong{background:#450a0a;border-color:#dc2626}
+body.dark .sec-btn{background:#1e293b;border-color:#334155;color:#94a3b8}
+body.dark .sec-btn.active{background:#64748b;color:#f1f5f9}
+body.dark .tag{background:#1e3a5f;color:#94a3b8}
+body.dark .toast{background:rgba(241,245,249,.9);color:#1e293b}
+body.dark .tip{background:#1c1917;color:#fbbf24}
+body.dark .btn-outline{background:#1e293b;border-color:#334155;color:#cbd5e1}
+
 </style>
 </head>
 <body>
 
 <div class="header">
-  <h1>📚 二建备考题库</h1>
+  <h1>📚 二建备考题库 <span onclick="toggleDark()" id="darkBtn" style="float:right;cursor:pointer;font-size:14px">🌙</span></h1>
   <div class="sub" id="subDate">加载中...</div>
   <div class="cd" id="cdText">⏳ 加载中</div>
 </div>
@@ -69,7 +88,22 @@ body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif;backg
 </div>
 
 <!-- 背诵 -->
-<div class="panel active" id="panel-recite">
+<div class="panel active" id="panel-speed">
+  <div class="card" style="text-align:center;min-height:180px">
+    <div style="font-size:11px;color:#94a3b8;margin-bottom:8px">⚡ 冲刺模式 · 5题/轮 · 10秒/题</div>
+    <div id="speedTimer" style="font-size:48px;font-weight:900;color:#475569;margin:12px 0;display:none">10</div>
+    <div id="speedQText" style="font-size:15px;line-height:1.7;font-weight:500;margin-bottom:12px">点击下方按钮开始</div>
+    <div class="choices" id="speedChoices" style="text-align:left"></div>
+    <div id="speedScore" style="font-size:13px;color:#64748b;margin-top:8px"></div>
+    <div id="speedResult" style="margin-top:8px"></div>
+  </div>
+  <div class="actions">
+    <button class="btn btn-outline btn-sm" onclick="resetSpeed()">🔄 重来</button>
+    <button class="btn btn-primary" onclick="startSpeed()">▶ 开始新一轮</button>
+  </div>
+</div>
+
+<div class="panel" id="panel-recite" style="display:none">
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
     <span style="font-size:11px;color:#64748b" id="reciteLabel">全部章节</span>
     <span style="font-size:13px;font-weight:700;color:#475569" id="reciteCount">0/0</span>
@@ -480,6 +514,72 @@ function renderAll(){
 }
 
 // ============ 初始化 ============
+
+// ===== 冲刺模式 =====
+var speedQ=[], speedI=0, speedTimer=null, speedSec=10, speedStreak=0, speedBest=0;
+function startSpeed(){
+  var all=window.DATA.recite.concat(window.DATA.quiz,window.DATA.exam);
+  for(var i=all.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=all[i];all[i]=all[j];all[j]=t;}
+  speedQ=all.slice(0,5);speedI=0;
+  showSpeedQ();
+}
+function showSpeedQ(){
+  if(speedI>=speedQ.length){
+    $('speedQText').innerHTML='<div style="font-size:28px">🎉</div>完成!';
+    $('speedChoices').innerHTML='';
+    $('speedTimer').style.display='none';
+    $('speedScore').textContent='本轮完成';
+    if(speedTimer){clearInterval(speedTimer);speedTimer=null;}
+    return;
+  }
+  var q=speedQ[speedI];
+  $('speedQText').textContent=q.q||'';
+  var choices=q.choices||[];
+  if(!choices.length){speedI++;showSpeedQ();return;}
+  var h='';
+  for(var j=0;j<choices.length;j++){
+    h+='<div class="choice" onclick="pickSpeed('+j+')"><span class="pre">'+'ABCD'[j]+'.</span>'+choices[j]+'</div>';
+  }
+  $('speedChoices').innerHTML=h;
+  $('speedScore').textContent='第'+(speedI+1)+'/5题';
+  speedSec=10;
+  $('speedTimer').style.display='block';
+  $('speedTimer').textContent=speedSec;
+  $('speedTimer').style.color='#475569';
+  if(speedTimer)clearInterval(speedTimer);
+  speedTimer=setInterval(function(){
+    speedSec--;
+    $('speedTimer').textContent=speedSec;
+    if(speedSec<=3)$('speedTimer').style.color='#dc2626';
+    if(speedSec<=0){clearInterval(speedTimer);speedI++;showSpeedQ();toast('⏰ 超时!');}
+  },1000);
+}
+function pickSpeed(j){
+  if(speedTimer){clearInterval(speedTimer);speedTimer=null;}
+  var q=speedQ[speedI];
+  var correct=Array.isArray(q.answer)?q.answer.indexOf(j)>=0:j===q.answer;
+  var chs=$('speedChoices').querySelectorAll('.choice');
+  for(var i=0;i<chs.length;i++){
+    chs[i].style.pointerEvents='none';
+    if(Array.isArray(q.answer)&&q.answer.indexOf(i)>=0)chs[i].classList.add('correct');
+    else if(i===q.answer)chs[i].classList.add('correct');
+  }
+  if(!correct){chs[j].classList.add('wrong');speedStreak=0;}
+  else{speedStreak++;if(speedStreak>speedBest)speedBest=speedStreak;}
+  toast(correct?'✅':'❌');
+  setTimeout(function(){speedI++;showSpeedQ();},correct?500:1200);
+}
+function resetSpeed(){speedBest=0;speedStreak=0;$('speedQText').textContent='点击下方按钮开始';$('speedChoices').innerHTML='';$('speedTimer').style.display='none';$('speedScore').textContent='';}
+
+// ===== 暗色模式 =====
+function toggleDark(){
+  var b=document.body;
+  b.classList.toggle('dark');
+  $('darkBtn').textContent=b.classList.contains('dark')?'☀️':'🌙';
+  try{localStorage.setItem('dark',b.classList.contains('dark')?'1':'0');}catch(e){}
+}
+try{if(localStorage.getItem('dark')==='1'){document.body.classList.add('dark');setTimeout(function(){$('darkBtn')&&($('darkBtn').textContent='☀️');},100);}}catch(e){}
+
 function init(){
   var d=new Date();
   $('subDate').textContent='截止 2026.08.07 · '+d.toLocaleDateString('zh-CN');
@@ -503,5 +603,8 @@ if('serviceWorker' in navigator){
 init();
 </script>
 
+<script>
+if('serviceWorker' in navigator){navigator.serviceWorker.register('/sw.js');}
+</script>
 </body>
 </html>
