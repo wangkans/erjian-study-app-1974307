@@ -389,22 +389,55 @@ function renderCase(){
 }
 function submitCase(){
   var c=window.DATA.case[window.C.idx];
+  var answer=($('caseAnswerInput').value||'').toLowerCase();
   $('caseAnswerInput').disabled=true;
   $('caseAnswerBox').style.display='none';
   $('caseBtn').style.display='none';
   $('caseNext').style.display='';
-  // 生成得分点+干扰项
-  var pts=c.points.map(function(p){return{text:p,correct:true};});
-  var decoys=['桩基施工前需做静载试验','混凝土配合比由施工单位确定','围堰高度大于常水位即可'];
-  for(var i=0;i<Math.min(2,decoys.length);i++){if(c.points.indexOf(decoys[i])<0)pts.push({text:decoys[i],correct:false});}
-  for(var i=pts.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=pts[i];pts[i]=pts[j];pts[j]=t;}
-  var h='';
-  for(var i=0;i<pts.length;i++){
-    h+='<label style="display:flex;gap:6px;padding:5px 0;font-size:12px;cursor:pointer"><input type="checkbox" style="margin-top:2px" onchange="updateCaseScore()" value="'+(pts[i].correct?'1':'0')+'"><span>'+pts[i].text+'</span></label>';
+  
+  // 自动判分: 对每个得分点提取关键词, 检测是否在答案中出现
+  var pts=[];
+  for(var i=0;i<c.points.length;i++){
+    var p=c.points[i];
+    // 提取关键词: 去掉箭头/符号, 取关键词
+    var terms=p.replace(/[→→\-\>]/g,' ').replace(/[()（）]/g,' ').split(/[\s,，、]+/).filter(function(t){return t.length>=2;});
+    var matched=false;
+    for(var j=0;j<terms.length;j++){
+      if(answer.indexOf(terms[j].toLowerCase())>=0){matched=true;break;}
+    }
+    pts.push({text:p, correct:true, autoMatched:matched});
   }
+  
+  // 加2个干扰项
+  var decoys=['桩基施工前需做静载试验','混凝土配合比报告由施工单位自行确定','围堰高度只需大于常水位'];
+  for(var i=0;i<Math.min(2,decoys.length);i++){
+    if(c.points.indexOf(decoys[i])<0){
+      var matched=false;
+      var terms=decoys[i].replace(/[→→\-\>]/g,' ').split(/[\s,，、]+/).filter(function(t){return t.length>=2;});
+      for(var j=0;j<terms.length;j++){if(answer.indexOf(terms[j].toLowerCase())>=0){matched=true;break;}}
+      pts.push({text:decoys[i], correct:false, autoMatched:matched});
+    }
+  }
+  
+  // shuffle
+  for(var i=pts.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=pts[i];pts[i]=pts[j];pts[j]=t;}
+  
+  var autoGot=0;
+  var h='<div style="font-size:10px;color:#94a3b8;margin-bottom:4px">🤖 系统已自动预判，请核对调整：</div>';
+  for(var i=0;i<pts.length;i++){
+    var icon=pts[i].autoMatched?'🤖':'';
+    var checked=pts[i].autoMatched?' checked':'';
+    if(pts[i].autoMatched && pts[i].correct) autoGot++;
+    h+='<label style="display:flex;gap:6px;padding:5px 0;font-size:12px;cursor:pointer'+(pts[i].autoMatched?';background:#f0fdf4;border-radius:4px;padding:5px':'')+'"><input type="checkbox" style="margin-top:2px" onchange="updateCaseScore()" value="'+(pts[i].correct?'1':'0')+'"'+checked+'><span style="color:'+(pts[i].correct?'#475569':'#94a3b8')+'">'+icon+' '+pts[i].text+'</span></label>';
+  }
+  h+='<div style="font-size:10px;color:#64748b;margin-top:6px">💡 绿色高亮=系统识别到的，取消勾选=你实际没答到</div>';
   $('casePoints').innerHTML=h;
   $('caseScoreBox').style.display='block';
   updateCaseScore();
+  
+  // 显示自动得分提示
+  var pct=Math.round(autoGot/c.points.length*100);
+  toast('🤖 自动识别 '+autoGot+'/'+c.points.length+' 个得分点 ('+pct+'%)');
 }
 function updateCaseScore(){
   var c=window.DATA.case[window.C.idx];
