@@ -589,6 +589,7 @@ function pickQ(j){
   var correct=j===q.answer;
   window.Q.hist[q.id]={time:Date.now(),wrong:correct?0:1};
   save();
+  updateDaily();
   var chs=$('quizChoices').querySelectorAll('.choice');
   for(var i=0;i<chs.length;i++){chs[i].style.pointerEvents='none';if(i===q.answer)chs[i].classList.add('reveal-correct');}
   if(!correct)chs[j].classList.add('wrong');
@@ -599,6 +600,7 @@ function submitMulti(){
   var correct=q.answer.join(',')===window.Q.sel.sort().join(',');
   window.Q.hist[q.id]={time:Date.now(),wrong:correct?0:1};
   save();
+  updateDaily();
   var chs=$('quizChoices').querySelectorAll('.choice');
   for(var i=0;i<chs.length;i++){chs[i].style.pointerEvents='none';if(q.answer.indexOf(i)>=0)chs[i].classList.add('reveal-correct');}
   for(var i=0;i<window.Q.sel.length;i++){if(q.answer.indexOf(window.Q.sel[i])<0)chs[window.Q.sel[i]].classList.add('wrong');}
@@ -645,6 +647,7 @@ function pickQuizLike(j,key){
   var correct=j===q.answer;
   state.hist[q.id]={time:Date.now(),wrong:correct?0:1};
   save();
+  updateDaily();
   var el=key==='E'?$('examChoices'):$('quizChoices');
   var chs=el.querySelectorAll('.choice');
   for(var i=0;i<chs.length;i++){chs[i].style.pointerEvents='none';if(i===q.answer)chs[i].classList.add('reveal-correct');}
@@ -658,6 +661,7 @@ function submitMultiLike(key){
   var correct=q.answer.sort().join(',')===state.sel.sort().join(',');
   state.hist[q.id]={time:Date.now(),wrong:correct?0:1};
   save();
+  updateDaily();
   var el=key==='E'?$('examChoices'):$('quizChoices');
   var chs=el.querySelectorAll('.choice');
   for(var i=0;i<chs.length;i++){chs[i].style.pointerEvents='none';if(q.answer.indexOf(i)>=0)chs[i].classList.add('reveal-correct');}
@@ -743,6 +747,7 @@ function updateCaseScore(){
   $('caseScore').innerHTML='<span style="font-size:28px;color:'+color+'">'+got+'/'+c.points.length+'</span> <span style="font-size:13px;color:'+color+'">'+(pct>=80?'优秀':(pct>=60?'及格':'需加强'))+'</span>';
   window.C.hist[c.id]={score:got,total:c.points.length,time:Date.now()};
   save();
+  updateDaily();
 }
 function navC(d){window.C.idx=Math.max(0,Math.min((window.DATA.case||[]).length-1,window.C.idx+d));save();renderCase();}
 
