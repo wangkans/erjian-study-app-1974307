@@ -73,6 +73,11 @@ body.dark .btn-outline{background:#1e293b;border-color:#334155;color:#cbd5e1}
 </head>
 <body>
 
+<div id="debugBar" style="background:#fef3c7;padding:4px 8px;font-size:10px;color:#92400e;font-family:monospace;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #fde68a">
+  <span id="debugStatus">⏳ 检测中...</span>
+  <span onclick="location.href=location.href.split('?')[0]+'?cb='+Date.now()" style="cursor:pointer;text-decoration:underline">🔄 强制刷新</span>
+</div>
+
 <div class="header">
   <h1>📚 二建备考题库 <span style="float:right;display:flex;gap:6px"><span onclick="togglePomo()" id="pomoBtn" style="cursor:pointer;font-size:14px">🍅</span><span onclick="toggleDark()" id="darkBtn" style="cursor:pointer;font-size:14px">🌙</span></span></h1>
   <div class="sub" id="subDate">加载中...</div>
@@ -326,6 +331,22 @@ function setSec(key, sec){
   save();
   renderAll();
   updateDaily();
+  // 调试条
+  var dbg = document.getElementById('debugStatus');
+  if(dbg){
+    var ok = !!(window.DATA && window.DATA.recite && window.DATA.recite.length>0);
+    if(ok){
+      dbg.innerHTML = '✅ DATA: ' + window.DATA.recite.length + '背诵 ' + window.DATA.quiz.length + '刷题 ' + window.DATA.exam.length + '真题 ' + (window.DATA.case||[]).length + '案例';
+      dbg.style.color = '#065f46';
+      setTimeout(function(){
+        var bar = document.getElementById('debugBar');
+        if(bar) bar.style.display = 'none';
+      }, 3000);
+    } else {
+      dbg.textContent = '❌ DATA未加载，点击右侧强制刷新';
+      dbg.style.color = '#dc2626';
+    }
+  }
 }
 
 // ============ 背诵 ============
@@ -910,6 +931,22 @@ function init(){
   $('cdText').textContent+=' · 背诵'+window.DATA.recite.length+'刷题'+window.DATA.quiz.length+'真题'+window.DATA.exam.length;
   renderAll();
   updateDaily();
+  // 调试条
+  var dbg = document.getElementById('debugStatus');
+  if(dbg){
+    var ok = !!(window.DATA && window.DATA.recite && window.DATA.recite.length>0);
+    if(ok){
+      dbg.innerHTML = '✅ DATA: ' + window.DATA.recite.length + '背诵 ' + window.DATA.quiz.length + '刷题 ' + window.DATA.exam.length + '真题 ' + (window.DATA.case||[]).length + '案例';
+      dbg.style.color = '#065f46';
+      setTimeout(function(){
+        var bar = document.getElementById('debugBar');
+        if(bar) bar.style.display = 'none';
+      }, 3000);
+    } else {
+      dbg.textContent = '❌ DATA未加载，点击右侧强制刷新';
+      dbg.style.color = '#dc2626';
+    }
+  }
 }
 </script>
 
