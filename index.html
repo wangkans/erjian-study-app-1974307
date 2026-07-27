@@ -1123,8 +1123,10 @@ function showSpeedQ(){
   },1000);
 }
 function pickSpeed(j){
+  if(!speedQ || !speedQ.length || speedI>=speedQ.length) return;
   if(speedTimer){clearInterval(speedTimer);speedTimer=null;}
   var q=speedQ[speedI];
+  if(!q || q.answer===undefined) return;
   var correct=Array.isArray(q.answer)?q.answer.indexOf(j)>=0:j===q.answer;
   var chs=$('speedChoices').querySelectorAll('.choice');
   for(var i=0;i<chs.length;i++){
