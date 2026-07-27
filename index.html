@@ -643,15 +643,15 @@ function submitRecall(){
     toast('请先写下你的答案');
     return;
   }
-  // 关键词匹配: 把答案拆词, 计算覆盖率
+  // 智能判分: 关键词 + 字形匹配
   var ansWords = c.a.replace(/[，。、；,.\s、\(\)（），.。]+/g, ' ').split(' ').filter(function(w){return w.length>=2;});
   if(!ansWords.length){
-    // 没关键词, 直接显示答案
     showAnswer();
     return;
   }
+  var userWords = userAnswer.replace(/[，。、；,.\s、\(\)（），.。]+/g, ' ').split(' ').filter(function(w){return w.length>=2;});
   var matched = 0, matchedWords = [], missed = [];
-    for(var i=0;i<ansWords.length;i++){
+  for(var i=0;i<ansWords.length;i++){
       var w = ansWords[i].toLowerCase();
       var hit = false;
       if(userAnswer.indexOf(w) >= 0){ hit = true; }
