@@ -1398,7 +1398,9 @@ function renderSimCaseQ(){
   $('simChoices').innerHTML='<textarea id="simCaseInput" style="width:100%;min-height:80px;border:1px solid #e2e8f0;border-radius:6px;padding:6px;font-size:12px;font-family:inherit" placeholder="作答...">'+(simA[simI]||'')+'</textarea>';
 }
 function simPick(j){
+  if(!simQ || !simQ.length) return;
   var q=simQ[simI];
+  if(!q) return;
   if(Array.isArray(q.answer)){
     if(!simA[simI])simA[simI]=[];
     var p=simA[simI].indexOf(j);if(p>=0)simA[simI].splice(p,1);else simA[simI].push(j);
@@ -1406,16 +1408,21 @@ function simPick(j){
   renderSimQ();
 }
 function simNav(d){
+  if(!simQ || !simQ.length) return;
   if(simI+simQ.length-1>=simQ.length&&d>0)return;
   if(simI<=0&&d<0)return;
-  if($('simCaseInput')){simA[simI]=$('simCaseInput').value;}
+  var simInput=$('simCaseInput');
+  if(simInput && simInput.value!==undefined){simA[simI]=simInput.value;}
   simI=Math.max(0,Math.min(simQ.length-1,simI+d));
   var q=simQ[simI];
+  if(!q) return;
   if(q.choices)renderSimQ();else renderSimCaseQ();
 }
 function simSubmit(){
+  if(!simQ || !simQ.length){toast('请先选择考试');return;}
   if(simTimer)clearInterval(simTimer);
-  if($('simCaseInput')){simA[simI]=$('simCaseInput').value;}
+  var simInput=$('simCaseInput');
+  if(simInput && simInput.value!==undefined){simA[simI]=simInput.value;}
   $('examRun').style.display='none';$('examResult').style.display='block';
   var correct=0,total=simQ.length;
   for(var i=0;i<simQ.length;i++){
