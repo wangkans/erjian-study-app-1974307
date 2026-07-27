@@ -723,34 +723,35 @@ function rateR(status){
   if(!c) return;
   // 计算本次学习时长(秒)
   var elapsed = window.R._startTime ? Math.floor((Date.now() - window.R._startTime)/1000) : 5;
+  var recall = window.R._lastRecall || 0;
   var nextReview = getNextReview(status);
   window.R.hist[c.id] = {
-    status: status, 
-    time: Date.now(), 
-    sec: (window.R.hist[c.id] && window.R.hist[c.id].sec || 0) + elapsed, // 累计
-    nextReview: nextReview, 
-    recall: window.R._lastRecall || 0
+    status: status,
+    time: Date.now(),
+    sec: (window.R.hist[c.id] && window.R.hist[c.id].sec || 0) + elapsed,
+    nextReview: nextReview,
+    recall: recall
   };
   save();
   window.R._lastRecall = 0;
-  if(status==='easy'){navR(1);return;}
-  if(status==='easy'){navR(1);return;}
-    renderRecite();renderProgress();
-    updateDaily();
 
-    // 动态间隔提示 (基于回忆得分)
-    var intervals = {
-      'hard': elapsed < 30 ? '30分钟后' : '10分钟后',
-      'ok': recall >= 80 ? '明天' : '6小时后',
-      'easy': recall >= 90 ? '4天后' : '明天'
-    };
-    // 鼓励性反馈
-    var e = '';
-    if(status==='easy' && recall >= 90) e = '🎉 完美掌握!';
-    else if(status==='ok' && recall >= 70) e = '👍 不错';
-    else if(status==='hard') e = '💪 再来一次';
-    toast((e || '已记录') + ' · 下次: ' + intervals[status] + ' · 学' + elapsed + '秒');
-  }
+  if(status==='easy'){navR(1);return;}
+  renderRecite();renderProgress();
+  updateDaily();
+
+  // 动态间隔提示 (基于回忆得分)
+  var intervals = {
+    'hard': elapsed < 30 ? '30分钟后' : '10分钟后',
+    'ok': recall >= 80 ? '明天' : '6小时后',
+    'easy': recall >= 90 ? '4天后' : '明天'
+  };
+  // 鼓励性反馈
+  var e = '';
+  if(status==='easy' && recall >= 90) e = '🎉 完美掌握!';
+  else if(status==='ok' && recall >= 70) e = '👍 不错';
+  else if(status==='hard') e = '💪 再来一次';
+  toast((e || '已记录') + ' · 下次: ' + intervals[status] + ' · 学' + elapsed + '秒');
+}
 
 // ============ 刷题 ============
 function renderQuiz(){
