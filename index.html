@@ -354,7 +354,7 @@ setInterval(function(){
   <div class="sec-row" id="reciteSec"></div>
   <div style="display:flex;gap:8px;justify-content:flex-end;margin-bottom:4px;font-size:10px">
     <label style="cursor:pointer;color:#64748b"><input type="checkbox" id="chkUnmastered" onchange="toggleUnmastered()"> 未掌握</label>
-    <label style="cursor:pointer;color:#64748b"><input type="checkbox" id="chkShuffle" onchange="toggleShuffle()"> 乱序</label>
+    <label style="cursor:pointer;color:#64748b"><input type="checkbox" id="chkShuffle" checked onchange="toggleShuffle()"> 乱序</label>
     <span onclick="speakCard()" style="cursor:pointer;color:#64748b">🔊</span>
   </div>
   <div class="card" style="min-height:200px" id="reciteCard">
@@ -1193,16 +1193,18 @@ function speakCard(){
 }
 
 // ===== 乱序/未掌握 =====
-var shuffleOn=false, unmasteredOn=false, _shuffleCache=null, _shuffleKey='';
+var shuffleOn=true, unmasteredOn=false, _shuffleCache=null, _shuffleKey='';
 function toggleShuffle(){shuffleOn=!shuffleOn;$('chkShuffle').checked=shuffleOn;_shuffleCache=null;window.R.idx=0;renderRecite();}
 function toggleUnmastered(){unmasteredOn=!unmasteredOn;$('chkUnmastered').checked=unmasteredOn;_shuffleCache=null;window.R.idx=0;renderRecite();}
 
-// 重写 getList for recite
+// 重写 getList for recite - 默认开启乱序
 var _getListOrig=getList;
 getList=function(data,sec){
   if(data===window.DATA.recite){
     var l=_getListOrig(data,sec);
     if(unmasteredOn) l=l.filter(function(c){var h=window.R.hist[c.id];return !h||h.status!=='easy';});
+    // 默认开启乱序 (除非用户主动关闭)
+    if(typeof shuffleOn==='undefined') shuffleOn=true;
     if(shuffleOn){
       var key=sec+'|'+(unmasteredOn?'1':'0');
       if(_shuffleCache&&_shuffleKey===key&&_shuffleCache.length===l.length){
