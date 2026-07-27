@@ -363,11 +363,14 @@ setInterval(function(){
 
     <!-- 主动回忆框 -->
     <div id="recallBox" style="margin-top:14px;padding:10px;background:#fffbeb;border:1px solid #fde68a;border-radius:8px">
-      <div style="font-size:10px;color:#92400e;margin-bottom:4px">🧠 主动回忆：用关键词写下你的答案（5秒）</div>
+      <div style="font-size:10px;color:#92400e;margin-bottom:4px;display:flex;justify-content:space-between;align-items:center">
+        <span>🧠 主动回忆：用关键词写下你的答案</span>
+        <span id="recallTimer" style="font-weight:600;color:#d97706;background:#fff7ed;padding:1px 6px;border-radius:8px">5s</span>
+      </div>
       <textarea id="recallInput" placeholder="例如：安置、粗平、调焦..." style="width:100%;min-height:50px;border:1px solid #fde68a;border-radius:6px;padding:6px;font-size:12px;font-family:inherit;background:#fff;outline:none;resize:vertical"></textarea>
       <div style="display:flex;gap:4px;margin-top:6px">
         <button class="btn btn-sm btn-primary" onclick="submitRecall()" style="flex:1">🤔 我答完了</button>
-        <button class="btn btn-sm btn-outline" onclick="showHint()" style="flex:0 0 auto">💡提示</button>
+        <button id="hintBtn" class="btn btn-sm btn-outline" onclick="showHint()" disabled style="flex:0 0 auto;opacity:0.5">💡提示(5s)</button>
       </div>
       <div id="recallHint" style="display:none;margin-top:6px;padding:6px;background:#fef3c7;border-radius:4px;font-size:11px;color:#78350f"></div>
       <div id="recallScore" style="display:none;margin-top:6px;font-size:11px"></div>
@@ -621,7 +624,7 @@ function renderRecite(){
   $('recallBox').style.display = 'block';
   $('reciteA').style.display='none';
   $('reciteBtns').style.display='none';
-  $('reciteBar').style.width=(i+1)/showList.length*100+'%';
+  $('recallBar').style.width=(i+1)/showList.length*100+'%';
   // 计时开始 + 卡片元信息(历史复习/正确率/学习秒数)
   window.R._startTime = Date.now();
   var prev = window.R.hist[c.id];
@@ -638,25 +641,50 @@ function renderRecite(){
   var metaDiv = document.createElement('div');
   metaDiv.className = 'recite-meta';
   metaDiv.innerHTML = meta;
-  // 插到Q之前
   var qEl = $('reciteQ');
   qEl.parentNode.insertBefore(metaDiv, qEl);
+
+  // 启动5秒倒计时 — 期间提示按钮disabled, 倒计时归零后启用
+  var timerEl = $('recallTimer');
+  var hintBtn = $('hintBtn');
+  if(timerEl && hintBtn){
+    if(window.R._countdownTimer) clearInterval(window.R._countdownTimer);
+    hintBtn.disabled = true;
+    hintBtn.style.opacity = '0.5';
+    hintBtn.textContent = '💡提示(5s)';
+    var secs = 5;
+    timerEl.textContent = secs + 's';
+    timerEl.style.color = '#d97706';
+    window.R._countdownTimer = setInterval(function(){
+      secs--;
+      if(secs > 0){
+        timerEl.textContent = secs + 's';
+      } else {
+        clearInterval(window.R._countdownTimer);
+        timerEl.textContent = '✓可提示';
+        timerEl.style.color = '#059669';
+        hintBtn.disabled = false;
+        hintBtn.style.opacity = '1';
+        hintBtn.textContent = '💡提示';
+      }
+    }, 1000);
+  }
 }
 
-// 显示首字提示(艾宾浩斯: 第一次完全隐藏, 之后显示首字)
+// 显示首字提示(真的首字+长度)
 function showHint(){
   var c = getList(window.DATA.recite, window.R.sec)[window.R.idx];
   if(!c || !c.a) return;
   // 提取关键词
   var kws = c.a.replace(/[，。、；,.\s]+/g, ' ').split(' ').filter(function(w){return w.length>=2;});
   if(!kws.length){return;}
-  // 显示每词前1-2个字符+长度
+  // 显示每词前1-2个字符(真首字) + 长度提示
   var hints = kws.slice(0, Math.min(5, kws.length)).map(function(w){
-    var len = w.length;
-    var show = len <= 2 ? w.charAt(0)+'_' : w.substring(0, 2)+'__';
-    return show;
+    var firstChar = w.charAt(0);
+    var restLen = w.length - 1;
+    return firstChar + '...(' + w.length + '字)';
   });
-  $('recallHint').innerHTML = '💡 提示: ' + hints.join('  ');
+  $('recallHint').innerHTML = '💡 提示(首字): ' + hints.join('  ');
   $('recallHint').style.display = 'block';
 }
 
@@ -830,9 +858,11 @@ function rateR(status){
   save();
   window.R._lastRecall = 0;
 
+  // 进度刷新(无论easy/ok/hard都立即更新今日目标)
+  updateDaily();
+
   if(status==='easy'){navR(1);return;}
   renderRecite();renderProgress();
-  updateDaily();
 
   // 动态间隔提示 (基于艾宾浩斯)
   var sm2r = window.R._sm2Result;
