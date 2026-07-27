@@ -435,12 +435,11 @@ function setSec(key, sec){
 function renderRecite(){
   var list=getList(window.DATA.recite,window.R.sec);
   if(!list.length){$('reciteQ').textContent='暂无内容';return;}
-  // 间隔复习: 优先显示到期的卡片
   var now = Date.now();
   var dueList = list.filter(function(c){
     var h = window.R.hist[c.id];
-    if(!h || !h.nextReview) return true; // 从未背诵
-    return h.nextReview <= now; // 到期了
+    if(!h || !h.nextReview) return true;
+    return h.nextReview <= now;
   });
   var showList = dueList.length > 0 ? dueList : list;
   if(showList !== list){
@@ -463,6 +462,8 @@ function renderRecite(){
   $('reciteA').style.display='none';
   $('reciteBtns').style.display='none';
   $('reciteBar').style.width=(i+1)/showList.length*100+'%';
+  // 计时开始
+  window.R._startTime = Date.now();
 }
 function showHint(){
   var c = getList(window.DATA.recite, window.R.sec)[window.R.idx];
@@ -542,20 +543,36 @@ function navR(d){
 function rateR(status){
   var c=getList(window.DATA.recite,window.R.sec)[window.R.idx];
   if(!c) return;
-  // 间隔重复: 计算下次复习时间
+  // 计算本次学习时长(秒)
+  var elapsed = window.R._startTime ? Math.floor((Date.now() - window.R._startTime)/1000) : 5;
   var nextReview = getNextReview(status);
-  window.R.hist[c.id]={status:status, time:Date.now(), nextReview:nextReview, recall:window.R._lastRecall||0};
+  window.R.hist[c.id] = {
+    status: status, 
+    time: Date.now(), 
+    sec: (window.R.hist[c.id] && window.R.hist[c.id].sec || 0) + elapsed, // 累计
+    nextReview: nextReview, 
+    recall: window.R._lastRecall || 0
+  };
   save();
   window.R._lastRecall = 0;
   if(status==='easy'){navR(1);return;}
   renderRecite();renderProgress();
+  updateDaily();
   var intervals = {'hard':'10分钟', 'ok':'6小时', 'easy':'明天'};
-  toast('已记录 · 下次复习: '+intervals[status]);
+  toast('已记录 · 下次复习: '+intervals[status] + ' · 学' + elapsed + '秒');
 }
 
 // ============ 刷题 ============
 function renderQuiz(){
   var list=getList(window.DATA.quiz,window.Q.sec);
+  // 默认乱序: 每次进入tab重新洗牌
+  if(window.Q._shuffledKey !== (window.Q.sec + '-' + new Date().toDateString())){
+    for(var i=list.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=list[i];list[i]=list[j];list[j]=t;}
+    window.Q._shuffledKey = window.Q.sec + '-' + new Date().toDateString();
+    window.Q._shuffledList = list;
+  } else {
+    list = window.Q._shuffledList || list;
+  }
   if(!list.length)return;
   var i=Math.min(window.Q.idx,list.length-1);window.Q.idx=i;
   var q=list[i];
@@ -593,7 +610,26 @@ function pickQ(j){
   var chs=$('quizChoices').querySelectorAll('.choice');
   for(var i=0;i<chs.length;i++){chs[i].style.pointerEvents='none';if(i===q.answer)chs[i].classList.add('reveal-correct');}
   if(!correct)chs[j].classList.add('wrong');
+  showExplain(q, j, correct);
   toast(correct?'✅ 正确!':'❌ 错了');
+}
+
+function showExplain(q, selIdx, correct){
+  var exp = $('quizExplain');
+  if(!exp){
+    exp = document.createElement('div');
+    exp.id = 'quizExplain';
+    exp.style.cssText = 'margin-top:10px;padding:10px;background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;font-size:12px;line-height:1.6';
+    var card = $('panel-quiz').querySelector('.card');
+    if(card) card.appendChild(exp);
+  }
+  var ansText = Array.isArray(q.answer) ? q.answer.map(function(i){return 'ABCDE'[i];}).join(',') : 'ABCDE'[q.answer];
+  var selText = 'ABCDE'[selIdx];
+  var expl = q.explain || '本题考查水利工程施工相关知识。建议回顾相关章节。';
+  exp.innerHTML = 
+    '<div style="display:flex;justify-content:space-between;margin-bottom:4px"><b style="color:'+(correct?'#059669':'#dc2626')+'">'+(correct?'✅ 答对了':'❌ 答错了')+'</b><span style="color:#94a3b8;font-size:11px">正确答案: <b style="color:#475569">'+ansText+'</b></span></div>'+
+    '<div style="color:#475569;font-size:11px;margin-bottom:4px">你选了: <b>'+selText+'</b></div>'+
+    '<div style="padding-top:6px;border-top:1px dashed #cbd5e1;color:#475569"><b>📚 解析:</b> ' + expl + '</div>';
 }
 function submitMulti(){
   var q=getList(window.DATA.quiz,window.Q.sec)[window.Q.idx];
@@ -604,6 +640,7 @@ function submitMulti(){
   var chs=$('quizChoices').querySelectorAll('.choice');
   for(var i=0;i<chs.length;i++){chs[i].style.pointerEvents='none';if(q.answer.indexOf(i)>=0)chs[i].classList.add('reveal-correct');}
   for(var i=0;i<window.Q.sel.length;i++){if(q.answer.indexOf(window.Q.sel[i])<0)chs[window.Q.sel[i]].classList.add('wrong');}
+  showExplain(q, window.Q.sel[0]!==undefined?window.Q.sel[0]:-1, correct);
   toast(correct?'✅ 全对!':'❌ 有错误');
 }
 function navQ(d){
@@ -641,6 +678,13 @@ function navQ(d){
 // ============ 真题 ============
 function renderExam(){
   var list=getList(window.DATA.exam,window.E.sec);
+  if(window.E._shuffledKey !== (window.E.sec + '-' + new Date().toDateString())){
+    for(var i=list.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=list[i];list[i]=list[j];list[j]=t;}
+    window.E._shuffledKey = window.E.sec + '-' + new Date().toDateString();
+    window.E._shuffledList = list;
+  } else {
+    list = window.E._shuffledList || list;
+  }
   if(!list.length)return;
   var i=Math.min(window.E.idx,list.length-1);window.E.idx=i;
   var q=list[i];
@@ -704,6 +748,7 @@ function pickQuizLike(j,key){
   var chs=el.querySelectorAll('.choice');
   for(var i=0;i<chs.length;i++){chs[i].style.pointerEvents='none';if(i===q.answer)chs[i].classList.add('reveal-correct');}
   if(!correct)chs[j].classList.add('wrong');
+  showExplain(q, j, correct);
   toast(correct?'✅ 正确!':'❌ 错了');
 }
 function submitMultiLike(key){
@@ -718,12 +763,22 @@ function submitMultiLike(key){
   var chs=el.querySelectorAll('.choice');
   for(var i=0;i<chs.length;i++){chs[i].style.pointerEvents='none';if(q.answer.indexOf(i)>=0)chs[i].classList.add('reveal-correct');}
   for(var i=0;i<state.sel.length;i++){if(q.answer.indexOf(state.sel[i])<0)chs[state.sel[i]].classList.add('wrong');}
+  showExplain(q, state.sel[0]!==undefined?state.sel[0]:-1, correct);
   toast(correct?'✅ 全对!':'❌ 有错误');
 }
 
 // ============ 案例 ============
 function renderCase(){
   var list=window.DATA.case||[];
+  // 默认乱序 (案例少, 全部洗牌)
+  if(!window.C._shuffled){
+    list = list.slice();
+    for(var i=list.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=list[i];list[i]=list[j];list[j]=t;}
+    window.C._shuffled = list;
+    window.DATA.case = list; // 替换原数组, 让其他函数也用乱序版
+  } else {
+    list = window.C._shuffled;
+  }
   if(!list.length)return;
   var i=Math.min(window.C.idx,list.length-1);window.C.idx=i;
   var c=list[i];
@@ -1045,24 +1100,37 @@ function updateDaily(){
   var tR=Math.ceil((rT-rD)/left),tQ=Math.ceil((qT-qD)/left),tE=Math.ceil((eT-eD)/left);
   $('dpTarget').textContent='今日目标: 背诵'+tR+'条 刷题'+tQ+'题 真题'+tE+'题';
   
-  // 时长
-  var hist=[];try{hist=JSON.parse(localStorage.getItem('timeLog')||'[]');}catch(e){}
-  var mins=0;for(var i=0;i<hist.length;i++){if(hist[i].d===today.toDateString())mins=hist[i].m||0;}
-  $('timeWarn').textContent=mins<30?'⚠️ 今日背诵'+(mins||0)+'分钟，底线30分钟':'✅ 背诵已达标('+mins+'分钟)';
+  // 时长统计: 累计每张卡片的实际学习秒数
+  var todayKey = today.toDateString();
+  var todaySecs = 0;
+  for(var k in window.R.hist){
+    var h = window.R.hist[k];
+    if(h.time && new Date(h.time).toDateString()===todayKey && h.sec) {
+      todaySecs += h.sec; // 累加每张卡片学习秒数
+    }
+  }
+  var mins = Math.floor(todaySecs/60);
+  $('timeWarn').textContent = mins < 30 
+    ? '⚠️ 今日背诵 ' + mins + '分' + (todaySecs%60) + '秒，底线30分钟' 
+    : '✅ 背诵已达标 ('+mins+'分钟)';
   $('timeWarn').style.color=mins>=30?'#059669':'#dc2626';
   
-  // 打卡
-  var streak=0;
-  for(var i=0;i<365;i++){var d=new Date(today);d.setDate(d.getDate()-i);var ds=d.toDateString();var f=hist.some(function(h){return h.d===ds;});if(f)streak++;else break;}
-  $('streakLabel').textContent=streak>0?'连续'+streak+'天':'';
-  
-  // 保存时长
-  var cur=Math.floor((Date.now()-sessionStart)/60000);
-  var found=false;
-  for(var i=0;i<hist.length;i++){if(hist[i].d===today.toDateString()){hist[i].m=Math.max(hist[i].m,cur);found=true;break;}}
-  if(!found)hist.push({d:today.toDateString(),m:cur});
-  if(hist.length>60)hist.shift();
-  try{localStorage.setItem('timeLog',JSON.stringify(hist));}catch(e){}
+  // 打卡: 今日有学习就算
+  var dayMap = {};
+  for(var k in window.R.hist){
+    var h = window.R.hist[k];
+    if(h.time && h.sec) {
+      var d = new Date(h.time).toDateString();
+      dayMap[d] = (dayMap[d] || 0) + h.sec;
+    }
+  }
+  var streak = 0;
+  for(var i=0;i<365;i++){
+    var d=new Date(today);d.setDate(d.getDate()-i);var ds=d.toDateString();
+    if(dayMap[ds] && dayMap[ds]>=60) streak++; // 当日≥1分钟算
+    else break;
+  }
+  $('streakLabel').textContent = streak>0 ? '🔥 连续'+streak+'天' : '';
 }
 var sessionStart=Date.now();
 setInterval(updateDaily,60000);
