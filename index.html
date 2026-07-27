@@ -650,28 +650,35 @@ function submitRecall(){
     showAnswer();
     return;
   }
-  var matched = 0;
-  var matchedWords = [];
-  for(var i=0;i<ansWords.length;i++){
-    var w = ansWords[i].toLowerCase();
-    // 短词要求精确匹配, 长词允许包含
-    if(userAnswer.indexOf(w) >= 0 || (w.length>=4 && userAnswer.indexOf(w.substring(0,3)) >= 0)){
-      matched++;
-      matchedWords.push(ansWords[i]);
+  var matched = 0, matchedWords = [], missed = [];
+    for(var i=0;i<ansWords.length;i++){
+      var w = ansWords[i].toLowerCase();
+      var hit = false;
+      if(userAnswer.indexOf(w) >= 0){ hit = true; }
+      else if(w.length>=4 && userAnswer.indexOf(w.substring(0,3)) >= 0){ hit = true; }
+      else {
+        for(var j=0;j<userWords.length;j++){
+          var uw = userWords[j].toLowerCase();
+          if(uw.length>=3 && (uw.indexOf(w.substring(0,2))>=0 || w.indexOf(uw.substring(0,2))>=0)){ hit = true; break; }
+        }
+      }
+      if(hit){matched++;matchedWords.push(ansWords[i]);}
+      else{missed.push(ansWords[i]);}
     }
+    var pct = Math.round(matched/ansWords.length*100);
+    var color = pct>=80 ? '#059669' : (pct>=50 ? '#d97706' : '#dc2626');
+    var grade = pct>=80 ? '优秀' : (pct>=50 ? '及格' : '需加强');
+    var emoji = pct>=80 ? '🎉' : (pct>=50 ? '👍' : '💪');
+    var h = '<div style="padding:8px 10px;background:'+(pct>=80?'#d1fae5':(pct>=50?'#fef3c7':'#fee2e2'))+';border-radius:6px;color:'+color+';font-weight:600;margin-bottom:4px">';
+    h += emoji + ' 关键词命中 '+matched+'/'+ansWords.length+' ('+pct+'%) · '+grade + '</div>';
+    if(matchedWords.length) h += '<div style="font-size:10px;color:#059669;margin-bottom:2px">✓ 答对: '+matchedWords.slice(0,5).join('、')+(matchedWords.length>5?'...':'')+'</div>';
+    if(missed.length) h += '<div style="font-size:10px;color:#dc2626">✗ 遗漏: '+missed.slice(0,5).join('、')+(missed.length>5?'...':'')+'</div>';
+    $('recallScore').innerHTML = h;
+    $('recallScore').style.display = 'block';
+    window.R._lastRecall = pct;
+    showAnswer();
+    if(pct >= 90) setTimeout(function(){toast('🎉 太棒了!完全掌握!');}, 600);
   }
-  var pct = Math.round(matched/ansWords.length*100);
-  var color = pct>=70 ? '#059669' : (pct>=40 ? '#d97706' : '#dc2626');
-  var grade = pct>=70 ? '优秀' : (pct>=40 ? '及格' : '需加强');
-  $('recallScore').innerHTML = '<div style="padding:6px;background:'+(pct>=70?'#dcfce7':(pct>=40?'#fef3c7':'#fee2e2'))+';border-radius:4px;color:'+color+';font-weight:600">📊 关键词命中 '+matched+'/'+ansWords.length+' ('+pct+'%) · '+grade+'</div>'+(matchedWords.length ? '<div style="font-size:10px;color:#64748b;margin-top:3px">命中: '+matchedWords.join('、')+'</div>' : '');
-  $('recallScore').style.display = 'block';
-
-  // 记录本次回忆得分
-  window.R._lastRecall = pct;
-
-  // 显示答案
-  showAnswer();
-}
 
 function showAnswer(){
   $('reciteA').style.display = 'block';
@@ -681,13 +688,24 @@ function showAnswer(){
 
 function flipR(){} // 兼容旧调用
 
-// 间隔重复: 根据等级排下次复习时间
+// SM-2 间隔重复算法 (Anki/SuperMemo 简化版)
 function getNextReview(grade){
   var now = Date.now();
-  if(grade === 'easy') return now + 86400000;  // 24小时后
-  if(grade === 'ok') return now + 6*3600000;    // 6小时后
-  if(grade === 'hard') return now + 10*60000;   // 10分钟后
-  return now + 3600000; // 默认1小时
+  var recall = window.R._lastRecall || 0;
+  if(grade === 'easy'){
+    if(recall >= 90) return now + 4 * 86400000;
+    return now + 86400000;
+  }
+  if(grade === 'ok'){
+    if(recall >= 80) return now + 24 * 3600000;
+    if(recall >= 50) return now + 6 * 3600000;
+    return now + 3600000;
+  }
+  if(grade === 'hard'){
+    if(recall >= 30) return now + 30 * 60000;
+    return now + 10 * 60000;
+  }
+  return now + 3600000;
 }
 
 function navR(d){
@@ -716,11 +734,23 @@ function rateR(status){
   save();
   window.R._lastRecall = 0;
   if(status==='easy'){navR(1);return;}
-  renderRecite();renderProgress();
-  updateDaily();
-  var intervals = {'hard':'10分钟', 'ok':'6小时', 'easy':'明天'};
-  toast('已记录 · 下次复习: '+intervals[status] + ' · 学' + elapsed + '秒');
-}
+  if(status==='easy'){navR(1);return;}
+    renderRecite();renderProgress();
+    updateDaily();
+
+    // 动态间隔提示 (基于回忆得分)
+    var intervals = {
+      'hard': elapsed < 30 ? '30分钟后' : '10分钟后',
+      'ok': recall >= 80 ? '明天' : '6小时后',
+      'easy': recall >= 90 ? '4天后' : '明天'
+    };
+    // 鼓励性反馈
+    var e = '';
+    if(status==='easy' && recall >= 90) e = '🎉 完美掌握!';
+    else if(status==='ok' && recall >= 70) e = '👍 不错';
+    else if(status==='hard') e = '💪 再来一次';
+    toast((e || '已记录') + ' · 下次: ' + intervals[status] + ' · 学' + elapsed + '秒');
+  }
 
 // ============ 刷题 ============
 function renderQuiz(){
