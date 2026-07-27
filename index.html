@@ -823,7 +823,9 @@ function showExplain(q, selIdx, correct){
 }
 function submitMulti(){
   var q=getList(window.DATA.quiz,window.Q.sec)[window.Q.idx];
-  var correct=q.answer.join(',')===window.Q.sel.sort().join(',');
+  // q.answer 可能是数字或数组，统一转为数组
+  var ansArr = Array.isArray(q.answer) ? q.answer : [q.answer];
+  var correct=ansArr.join(',')===window.Q.sel.sort().join(',');
   window.Q.hist[q.id]={time:Date.now(),wrong:correct?0:1};
   save();
   updateDaily();
@@ -945,7 +947,9 @@ function submitMultiLike(key){
   var data=key==='E'?window.DATA.exam:window.DATA.quiz;
   var state=key==='E'?window.E:window.Q;
   var q=getList(data,state.sec)[state.idx];
-  var correct=q.answer.sort().join(',')===state.sel.sort().join(',');
+  // q.answer 可能是数字或数组，统一转为数组
+  var ansArr = Array.isArray(q.answer) ? q.answer : [q.answer];
+  var correct=ansArr.sort().join(',')===state.sel.sort().join(',');
   state.hist[q.id]={time:Date.now(),wrong:correct?0:1};
   save();
   updateDaily();
@@ -1137,9 +1141,12 @@ function resetSpeed(){speedBest=0;speedStreak=0;$('speedQText').textContent='点
 // ===== 暗色模式 =====
 function toggleDark(){
   var b=document.body;
-  b.classList.toggle('dark');
-  $('darkBtn').textContent=b.classList.contains('dark')?'☀️':'🌙';
-  try{localStorage.setItem('dark',b.classList.contains('dark')?'1':'0');}catch(e){}
+  if(b && b.classList && b.classList.toggle){
+    b.classList.toggle('dark');
+    var dbg = document.getElementById('darkBtn');
+    if(dbg) dbg.textContent = b.classList.contains('dark')?'☀️':'🌙';
+    try{localStorage.setItem('dark',b.classList.contains('dark')?'1':'0');}catch(e){}
+  }
 }
 try{if(localStorage.getItem('dark')==='1'){document.body.classList.add('dark');setTimeout(function(){$('darkBtn')&&($('darkBtn').textContent='☀️');},100);}}catch(e){}
 
