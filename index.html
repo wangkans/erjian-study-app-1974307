@@ -830,8 +830,8 @@ function submitMulti(){
   save();
   updateDaily();
   var chs=$('quizChoices').querySelectorAll('.choice');
-  for(var i=0;i<chs.length;i++){chs[i].style.pointerEvents='none';if(q.answer.indexOf(i)>=0)chs[i].classList.add('reveal-correct');}
-  for(var i=0;i<window.Q.sel.length;i++){if(q.answer.indexOf(window.Q.sel[i])<0)chs[window.Q.sel[i]].classList.add('wrong');}
+  for(var i=0;i<chs.length;i++){chs[i].style.pointerEvents='none';if(ansArr.indexOf(i)>=0)chs[i].classList.add('reveal-correct');}
+  for(var i=0;i<window.Q.sel.length;i++){if(ansArr.indexOf(window.Q.sel[i])<0)chs[window.Q.sel[i]].classList.add('wrong');}
   showExplain(q, window.Q.sel[0]!==undefined?window.Q.sel[0]:-1, correct);
   toast(correct?'✅ 全对!':'❌ 有错误');
 }
@@ -955,8 +955,8 @@ function submitMultiLike(key){
   updateDaily();
   var el=key==='E'?$('examChoices'):$('quizChoices');
   var chs=el.querySelectorAll('.choice');
-  for(var i=0;i<chs.length;i++){chs[i].style.pointerEvents='none';if(q.answer.indexOf(i)>=0)chs[i].classList.add('reveal-correct');}
-  for(var i=0;i<state.sel.length;i++){if(q.answer.indexOf(state.sel[i])<0)chs[state.sel[i]].classList.add('wrong');}
+  for(var i=0;i<chs.length;i++){chs[i].style.pointerEvents='none';if(ansArr.indexOf(i)>=0)chs[i].classList.add('reveal-correct');}
+  for(var i=0;i<state.sel.length;i++){if(ansArr.indexOf(state.sel[i])<0)chs[state.sel[i]].classList.add('wrong');}
   showExplain(q, state.sel[0]!==undefined?state.sel[0]:-1, correct);
   toast(correct?'✅ 全对!':'❌ 有错误');
 }
