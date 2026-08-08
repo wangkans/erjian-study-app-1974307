@@ -40,49 +40,46 @@ body{
 .header{
   background:linear-gradient(135deg,#1e293b 0%,#334155 100%);
   color:#f1f5f9;
-  padding:14px 16px 12px;
+  padding:12px 16px 10px;
   position:sticky;top:0;z-index:100;
   box-shadow:var(--shadow-md);
 }
-.header h1{font-size:17px;font-weight:600;letter-spacing:0.3px}
-.header .sub{font-size:11px;opacity:.75;margin-top:3px}
+.header h1{font-size:16px;font-weight:600;letter-spacing:0.3px}
+.header .sub{font-size:11px;opacity:.75;margin-top:2px}
 .header .cd{
-  font-size:10px;opacity:.9;margin-top:4px;
+  font-size:10px;opacity:.9;margin-top:3px;
   background:rgba(255,255,255,.12);
   backdrop-filter:blur(10px);
-  display:inline-block;padding:3px 10px;border-radius:20px;
+  display:inline-block;padding:2px 9px;border-radius:20px;
   border:1px solid rgba(255,255,255,.15);
 }
 .tabs{
   display:flex;
-  background:rgba(255,255,255,0.85);
+  background:rgba(255,255,255,0.92);
   backdrop-filter:blur(20px);
   -webkit-backdrop-filter:blur(20px);
   border-bottom:1px solid var(--c-border);
-  position:sticky;top:52px;z-index:99;
+  position:sticky;top:48px;z-index:99;
   overflow-x:auto;
-  padding:4px 8px;
+  padding:2px 6px;
 }
 .tab{
   flex:1;text-align:center;
-  padding:10px 6px 8px;
+  padding:8px 4px 6px;
   font-size:11px;font-weight:500;
   color:#94a3b8;
   border-bottom:2px solid transparent;
   cursor:pointer;
-  min-width:50px;
-  border-radius:var(--r-sm);
-  transition:all .2s ease;
+  min-width:46px;
+  transition:color .15s ease, border-color .15s ease;
 }
-.tab:hover{background:rgba(0,0,0,0.02)}
 .tab.active{
   color:#059669;
   border-bottom-color:#059669;
   font-weight:600;
-  background:rgba(5,150,105,0.06);
 }
 .tab .em{font-size:16px;display:block;margin-bottom:2px}
-.panel{display:none;padding:16px 14px;max-width:640px;margin:0 auto;animation:fadeIn .3s ease}
+.panel{display:none;padding:12px 14px;max-width:640px;margin:0 auto;animation:fadeIn .3s ease}
 @keyframes fadeIn{
   from{opacity:0;transform:translateY(8px)}
   to{opacity:1;transform:translateY(0)}
@@ -90,13 +87,12 @@ body{
 .panel.active{display:block}
 .card{
   background:var(--c-card);
-  border-radius:var(--r-lg);
+  border-radius:var(--r-md);
   border:1px solid var(--c-border);
-  padding:18px;margin-bottom:12px;
-  box-shadow:var(--shadow-md);
-  transition:box-shadow .2s ease, transform .2s ease;
+  padding:14px;margin-bottom:10px;
+  box-shadow:var(--shadow-sm);
 }
-.card:hover{box-shadow:var(--shadow-lg)}
+.card:hover{box-shadow:var(--shadow-md)}
 .tag{display:inline-block;font-size:9px;background:#f1f5f9;color:#64748b;padding:2px 6px;border-radius:4px}
 .choices{margin-top:12px;display:flex;flex-direction:column;gap:6px}
 .choice{
@@ -108,7 +104,7 @@ body{
   transition:all .15s ease;
   margin-bottom:4px;
 }
-.choice:hover{border-color:#94a3b8;background:#f8fafc;transform:translateX(2px)}
+.choice:hover{border-color:#94a3b8;background:#f8fafc}
 .choice.sel{border-color:#475569;background:#f1f5f9;font-weight:500}
 .choice.correct{border-color:#10b981;background:#d1fae5;color:#065f46;font-weight:500}
 .choice.wrong{border-color:#ef4444;background:#fee2e2;color:#991b1b}
@@ -124,12 +120,12 @@ body{
 .actions{display:flex;gap:5px;margin-top:12px;flex-wrap:wrap}
 .btn{
   flex:1;min-width:65px;
-  padding:10px 12px;border:none;
+  padding:9px 12px;border:none;
   border-radius:var(--r-md);
   font-size:12px;font-weight:600;
   cursor:pointer;text-align:center;
-  min-height:42px;
-  transition:all .15s ease;
+  min-height:38px;
+  transition:transform .12s ease, box-shadow .12s ease;
   letter-spacing:0.2px;
 }
 .btn:active{transform:scale(0.98)}
@@ -164,13 +160,12 @@ body{
   background:var(--c-card);
   border-radius:var(--r-md);
   border:1px solid var(--c-border);
-  padding:10px 5px;text-align:center;
-  box-shadow:var(--shadow-sm);
+  padding:8px 4px;text-align:center;
 }
-.stat-card .num{font-size:16px;font-weight:700;color:#475569}
+.stat-card .num{font-size:15px;font-weight:700;color:#475569}
 .stat-card .num.good{color:#059669}
 .stat-card .num.bad{color:#dc2626}
-.stat-card .lbl{font-size:9px;color:#94a3b8}
+.stat-card .lbl{font-size:9px;color:#94a3b8;margin-top:1px}
 .sec-row{display:flex;gap:4px;overflow-x:auto;padding:0 0 4px;margin-bottom:4px}
 .sec-btn{
   flex-shrink:0;
@@ -189,7 +184,7 @@ body{
   font-weight:600;
   box-shadow:0 2px 6px rgba(71,85,105,0.25);
 }
-.progress-bar{height:6px;background:rgba(0,0,0,0.05);border-radius:3px;margin:8px 0;overflow:hidden}
+.progress-bar{height:5px;background:rgba(0,0,0,0.05);border-radius:3px;margin:6px 0;overflow:hidden}
 .progress-fill{height:100%;transition:width .4s ease;background:linear-gradient(90deg,#10b981,#059669);border-radius:3px}
 .toast{
   position:fixed;bottom:100px;
@@ -305,13 +300,13 @@ setInterval(function(){
 <div id="pomoBar" style="display:none;text-align:center;background:#fef2f2;padding:3px;font-size:11px;font-weight:600;color:#dc2626;border-bottom:1px solid #fecaca">🍅 专注 · <span id="pomoTime">25:00</span> · <span onclick="togglePomo()" style="cursor:pointer;text-decoration:underline">停止</span></div>
 
 <div class="tabs" id="tabs">
-  <div class="tab active" data-tab="speed" onclick="switchTab('speed')"><span class="em">⚡</span>冲刺</div>
+  <div class="tab active" data-tab="progress" onclick="switchTab('progress')"><span class="em">📊</span>进度</div>
   <div class="tab" data-tab="recite" onclick="switchTab('recite')"><span class="em">📖</span>背诵</div>
   <div class="tab" data-tab="quiz" onclick="switchTab('quiz')"><span class="em">📝</span>刷题</div>
   <div class="tab" data-tab="exam" onclick="switchTab('exam')"><span class="em">📄</span>真题</div>
   <div class="tab" data-tab="case" onclick="switchTab('case')"><span class="em">📋</span>案例</div>
   <div class="tab" data-tab="exam_sim" onclick="switchTab('exam_sim')"><span class="em">🎯</span>模考</div>
-  <div class="tab" data-tab="progress" onclick="switchTab('progress')"><span class="em">📊</span>进度</div>
+  <div class="tab" data-tab="speed" onclick="switchTab('speed')"><span class="em">⚡</span>冲刺</div>
 </div>
 <div id="searchBar" style="display:none;padding:6px 12px;background:#fff;border-bottom:1px solid #e2e8f0">
   <div style="display:flex;gap:4px"><input id="searchInput" placeholder="搜索知识点..." style="flex:1;padding:6px 10px;border:1px solid #e2e8f0;border-radius:6px;font-size:12px;outline:none" oninput="doSearch()"><button class="btn btn-sm btn-outline" onclick="closeSearch()">✕</button></div>
@@ -319,26 +314,14 @@ setInterval(function(){
 </div>
 
 <!-- 背诵 -->
-<div class="panel active" id="panel-speed">
-  <div class="card" style="margin-bottom:8px;padding:10px">
-    <div style="font-size:10px;color:#64748b;text-align:center;margin-bottom:2px">📅 每日计划 · <span id="phaseLabel"></span> · 🔥 <span id="streakLabel"></span></div>
-    <div style="display:flex;gap:6px;margin:4px 0">
-      <div style="flex:1;text-align:center;font-size:9px"><div style="font-size:16px;font-weight:700;color:#475569" id="dpR">0</div>背诵</div>
-      <div style="flex:1;text-align:center;font-size:9px"><div style="font-size:16px;font-weight:700;color:#d97706" id="dpQ">0</div>刷题</div>
-      <div style="flex:1;text-align:center;font-size:9px"><div style="font-size:16px;font-weight:700;color:#059669" id="dpE">0</div>真题</div>
-      <div style="flex:1;text-align:center;font-size:9px"><div style="font-size:16px;font-weight:700;color:#8b5cf6" id="dpC">0</div>案例</div>
-    </div>
-    <div class="progress-bar"><div class="progress-fill" id="dpBar" style="width:0%"></div></div>
-    <div style="font-size:9px;color:#64748b;text-align:center" id="dpTarget"></div>
-    <div style="font-size:9px;color:#dc2626;text-align:center" id="timeWarn"></div>
-  </div>
-  <div class="card" style="text-align:center;min-height:140px">
-    <div id="focusTip" style="display:none;font-size:10px;color:#92400e;background:#fffbeb;border:1px solid #fde68a;border-radius:6px;padding:5px 8px;margin-bottom:8px">📵 把手机放另一房间,关通知——手机在视线内就在消耗你的专注力</div>
-    <div style="font-size:11px;color:#94a3b8;margin-bottom:8px">⚡ 冲刺模式 · 5题/轮 · 10秒/题</div>
-    <div id="speedTimer" style="font-size:48px;font-weight:900;color:#475569;margin:12px 0;display:none">10</div>
+<div class="panel" id="panel-speed">
+  <div class="card" style="text-align:center">
+    <div id="focusTip" style="display:none;font-size:11px;color:#92400e;background:#fffbeb;border:1px solid #fde68a;border-radius:6px;padding:8px 10px;margin-bottom:10px;text-align:left">📵 把手机放另一房间,关通知——手机在视线内就在消耗你的专注力</div>
+    <div style="font-size:11px;color:#94a3b8;margin-bottom:10px">⚡ 冲刺模式 · 5题/轮 · 10秒/题</div>
+    <div id="speedTimer" style="font-size:48px;font-weight:900;color:#475569;margin:8px 0;display:none">10</div>
     <div id="speedQText" style="font-size:15px;line-height:1.7;font-weight:500;margin-bottom:12px">点击下方按钮开始</div>
     <div class="choices" id="speedChoices" style="text-align:left"></div>
-    <div id="speedScore" style="font-size:13px;color:#64748b;margin-top:8px"></div>
+    <div id="speedScore" style="font-size:12px;color:#64748b;margin-top:8px"></div>
     <div id="speedResult" style="margin-top:8px"></div>
   </div>
   <div class="actions">
@@ -359,7 +342,7 @@ setInterval(function(){
     <label style="cursor:pointer;color:#64748b"><input type="checkbox" id="chkShuffle" checked onchange="toggleShuffle()"> 乱序</label>
     <span onclick="speakCard()" style="cursor:pointer;color:#64748b">🔊</span>
   </div>
-  <div class="card" style="min-height:200px" id="reciteCard">
+  <div class="card" style="min-height:180px" id="reciteCard">
     <div style="font-size:11px;color:#94a3b8;margin-bottom:4px">📖 问题 · 💡先自己想，再看答案</div>
     <div style="font-size:15px;line-height:1.7;font-weight:500" id="reciteQ">-</div>
 
@@ -527,29 +510,59 @@ setInterval(function(){
   <div id="examResult" style="display:none;text-align:center;padding:16px"></div>
 </div>
 
-<div class="panel" id="panel-progress">
-  <div class="stats-bar" id="progressStats"></div>
-  <div id="sleepTip" style="display:none;font-size:10px;color:#6d28d9;background:#f5f3ff;border:1px solid #ddd6fe;border-radius:6px;padding:6px 8px;margin-bottom:8px">🌙 睡眠记忆:睡前30分钟背最难的内容,学完就睡——睡眠会帮你把白天学的知识固化成长期记忆(睡前学效果最好)</div>
-  <div class="card">
-    <div style="font-size:12px;font-weight:600;color:#475569;margin-bottom:8px">✅ 今日小目标 · 完成即勾掉(积累成功体验)</div>
+<div class="panel active" id="panel-progress">
+  <!-- 1. 今日计划总览(原冲刺页卡) -->
+  <div class="card" style="padding:14px">
+    <div style="font-size:11px;color:#64748b;text-align:center;margin-bottom:6px">📅 每日计划 · <span id="phaseLabel"></span> · 🔥 <span id="streakLabel"></span></div>
+    <div style="display:flex;gap:6px;margin:6px 0">
+      <div style="flex:1;text-align:center"><div style="font-size:18px;font-weight:700;color:#475569" id="dpR">0</div><div style="font-size:10px;color:#64748b">背诵</div></div>
+      <div style="flex:1;text-align:center"><div style="font-size:18px;font-weight:700;color:#d97706" id="dpQ">0</div><div style="font-size:10px;color:#64748b">刷题</div></div>
+      <div style="flex:1;text-align:center"><div style="font-size:18px;font-weight:700;color:#059669" id="dpE">0</div><div style="font-size:10px;color:#64748b">真题</div></div>
+      <div style="flex:1;text-align:center"><div style="font-size:18px;font-weight:700;color:#8b5cf6" id="dpC">0</div><div style="font-size:10px;color:#64748b">案例</div></div>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="dpBar" style="width:0%"></div></div>
+    <div style="font-size:10px;color:#64748b;text-align:center;margin-top:6px" id="dpTarget"></div>
+    <div style="font-size:10px;color:#dc2626;text-align:center;margin-top:2px" id="timeWarn"></div>
+  </div>
+
+  <!-- 2. 今日怎么学(方法论核心卡片) -->
+  <div class="card" style="padding:14px">
+    <div style="font-size:12px;font-weight:600;color:#475569;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center">
+      <span>🎯 今日怎么学</span>
+      <span style="font-size:10px;color:#94a3b8;font-weight:400">基于《上瘾式学习》</span>
+    </div>
+    <div id="planToday"></div>
+    <div style="font-size:10px;color:#94a3b8;margin-top:8px;padding-top:8px;border-top:1px dashed #e2e8f0">
+      💡 核心心法: <b style="color:#475569">练时感觉越痛苦(默写不出来)→ 考时越稳</b>。感觉没用的时刻=记忆正在发生
+    </div>
+  </div>
+
+  <!-- 3. 今日小目标 -->
+  <div class="card" style="padding:14px">
+    <div style="font-size:12px;font-weight:600;color:#475569;margin-bottom:8px">✅ 今日小目标 · 完成即勾掉</div>
     <div id="miniGoals"></div>
-    <div style="font-size:10px;color:#94a3b8;margin-top:4px">小目标拆解:每次完成一个都算一次"成功体验",自我效能感会越来越强</div>
+    <div style="font-size:10px;color:#94a3b8;margin-top:6px">每勾一个 = 一次成功体验,自我效能感会越来越强</div>
   </div>
-  <div class="card">
-    <div style="font-size:12px;font-weight:600;color:#475569;margin-bottom:8px">💭 学习理由 · 倦怠时回看(自我参照)</div>
-    <div id="motiveText" style="font-size:12px;color:#475569;line-height:1.7;white-space:pre-wrap">写下一个"我为什么要考二建"的理由,学不进去时回看这里。</div>
-    <textarea id="motiveInput" style="display:none;width:100%;min-height:60px;border:1px solid #e2e8f0;border-radius:8px;padding:8px;font-size:12px;font-family:inherit;margin-top:6px" placeholder="例如:拿到二建证→岗位晋升/项目挂证/证明自己…"></textarea>
-    <div style="margin-top:6px"><button class="btn btn-sm btn-outline" onclick="toggleMotiveEdit()" id="motiveBtn">✏️ 写理由</button></div>
-    <div style="font-size:10px;color:#94a3b8;margin-top:6px">自我参照效应:与自己相关的信息记得最牢。写下理由=给大脑一个"这与我有关"的信号</div>
+
+  <!-- 4. 学习理由 -->
+  <div class="card" style="padding:14px">
+    <div style="font-size:12px;font-weight:600;color:#475569;margin-bottom:8px">💭 学习理由 · 倦怠时回看</div>
+    <div id="motiveText" style="font-size:12px;color:#475569;line-height:1.7;white-space:pre-wrap;background:#f8fafc;padding:10px;border-radius:8px;border-left:3px solid #94a3b8">写下一个"我为什么要考二建"的理由,学不进去时回看这里。</div>
+    <textarea id="motiveInput" style="display:none;width:100%;min-height:70px;border:1px solid #e2e8f0;border-radius:8px;padding:10px;font-size:12px;font-family:inherit;margin-top:8px;outline:none" placeholder="例如:拿到二建证→岗位晋升/项目挂证/证明自己…"></textarea>
+    <div style="margin-top:8px"><button class="btn btn-sm btn-outline" onclick="toggleMotiveEdit()" id="motiveBtn">✏️ 写理由</button></div>
   </div>
-  <div class="card">
+
+  <!-- 5. 总体进度 -->
+  <div class="card" style="padding:14px">
     <div style="font-size:12px;font-weight:600;color:#475569;margin-bottom:8px">📊 总体进度</div>
     <div class="progress-bar"><div class="progress-fill" id="totalBar" style="width:0%"></div></div>
-    <div id="achievements" style="display:flex;flex-wrap:wrap;gap:4px;font-size:18px;margin-top:4px"></div>
-  <div id="studyCal" style="display:flex;gap:2px;justify-content:center;flex-wrap:wrap;margin-top:8px"></div>
-  <div id="progressSummary" style="font-size:11px;color:#64748b;margin-top:4px"></div>
-  <div style="font-size:10px;color:#94a3b8;margin-top:6px">⚠️ 认知校准:感觉"看懂了"≠"记住了"。熟练度错觉——用错题率和闭卷默写检验真实掌握度,别信流畅感</div>
+    <div style="font-size:11px;color:#64748b;margin-top:4px" id="progressSummary">-</div>
+    <div id="achievements" style="display:flex;flex-wrap:wrap;gap:4px;font-size:18px;margin-top:8px"></div>
+    <div id="studyCal" style="display:flex;gap:2px;justify-content:center;flex-wrap:wrap;margin-top:8px"></div>
   </div>
+
+  <!-- 6. 睡眠提示 -->
+  <div id="sleepTip" style="display:none;font-size:11px;color:#6d28d9;background:#f5f3ff;border:1px solid #ddd6fe;border-radius:8px;padding:10px 12px;margin-top:8px">🌙 睡前30分钟背最难的内容,学完就睡——睡眠会帮你把白天学的知识固化成长期记忆</div>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -1272,10 +1285,62 @@ function renderProgress(){
   $('progressSummary').textContent='总计完成 '+done+'/'+total+' · 背诵已记'+rD+' · 刷题已答'+qD+' · 真题已答'+eD+' · 案例已做'+cD;
   renderMiniGoals();
   renderMotive();
+  renderPlanToday();
   updateSleepTip();
 }
 
-// ===== 今日小目标清单(自我效能: 小目标拆解+成功体验) =====
+// ===== 今日怎么学(方法论核心卡片:按skill推导的每日任务清单) =====
+function renderPlanToday(){
+  var el=$('planToday');if(!el)return;
+  var now=new Date();
+  var hour=now.getHours();
+  var dl=new Date(2026,7,7);
+  var left=Math.max(0,Math.ceil((dl-now)/86400000));
+  // 1. 时段定位
+  var phase=hour<12?'上午':(hour<14?'中午':(hour<18?'下午':(hour<21?'傍晚':'晚间')));
+  var isBedtime=hour>=21||hour<5; // 睡前时段
+  var isMorning=hour<12;
+  // 2. 当前累计(今日)
+  var todayKey=now.toDateString();
+  var rD=0,qD=0,eD=0,cD=0;
+  for(var k in window.R.hist){var h=window.R.hist[k];if(h.status==='easy'&&h.time&&new Date(h.time).toDateString()===todayKey)rD++;}
+  for(var k in window.Q.hist){var h=window.Q.hist[k];if(h.time&&new Date(h.time).toDateString()===todayKey)qD++;}
+  for(var k in window.E.hist){var h=window.E.hist[k];if(h.time&&new Date(h.time).toDateString()===todayKey)eD++;}
+  for(var k in window.C.hist){var h=window.C.hist[k];if(h.time&&new Date(h.time).toDateString()===todayKey)cD++;}
+  var todayTotal=rD+qD+eD+cD;
+  // 3. 今日建议(按时段+剩余天数)
+  var tasks=[];
+  if(isMorning){
+    // 上午:运动后记忆最佳(运动-认知协同)
+    tasks.push(['🧠 运动 10-20 分钟(快走/慢跑)', 'exercise-cognition:运动后BDNF提升,记忆效果最佳']);
+    tasks.push(['📖 背诵 20 题', 'active-recall+spaced-practice:5秒倒计时内先默写再看提示']);
+    tasks.push(['📝 刷题 30 题(三科混排)', 'interleaving:练时正确率下降是正常的,考时反而更稳']);
+  } else if(isBedtime){
+    // 晚间/深夜:睡前学习最有效
+    tasks.push(['🌙 睡前学习:背诵 ⭐硬骨头 10 题', 'sleep-memory:睡前学+睡眠巩固,遗忘率最低']);
+    tasks.push(['⚠️ 30 分钟内准备睡觉', 'sleep-memory:睡眠>复习时间,7小时底线']);
+  } else {
+    // 下午/傍晚:案例+综合
+    tasks.push(['📋 案例 1 道(背景→写→对照→自评)', 'elelorative-interrogation:用自己的话解释,标记 √△○']);
+    tasks.push(['📄 真题 20 题(混排)', 'interleaving:像真实考试那样混题型']);
+    tasks.push(['📖 背诵 ⭐硬骨头 10 题', 'mnemonics:难记的卡用故事/图像/地点法']);
+  }
+  // 4. 考前压缩提示
+  if(left<=14 && left>0){
+    tasks.push(['⏰ 考前 '+left+' 天:SM-2已自动压缩间隔', 'spaced-practice 滞后效应:考前密集冲刺']);
+  } else if(left===0){
+    tasks.push(['🎯 今天考试:禁咖啡/散步30分钟/不学新内容', 'sleep-memory:让大脑整理记忆']);
+  }
+  // 5. 渲染
+  var h='<div style="font-size:10px;color:#64748b;margin-bottom:6px">现在是 <b style="color:#475569">'+phase+'</b> · 距考试 <b style="color:#dc2626">'+left+' 天</b> · 今日已完成 '+todayTotal+' 项</div>';
+  h+='<div style="border-left:2px solid #cbd5e1;padding-left:10px">';
+  for(var i=0;i<tasks.length;i++){
+    var t=tasks[i];
+    h+='<div style="font-size:12px;color:#1e293b;padding:4px 0;line-height:1.5"><span style="color:#059669">▸</span> '+t[0]+'<div style="font-size:10px;color:#94a3b8;margin-top:1px;margin-left:14px">'+t[1]+'</div></div>';
+  }
+  h+='</div>';
+  el.innerHTML=h;
+}
 function renderMiniGoals(){
   var el=$('miniGoals');if(!el)return;
   var now=new Date();var dl=new Date(2026,7,7);var left=Math.max(1,Math.ceil((dl-now)/86400000));
