@@ -384,14 +384,6 @@ setInterval(function(){
       <span id="hardBtn" onclick="toggleHardCard()" style="cursor:pointer;font-size:11px;color:#b45309;display:none">⭐ 标记为硬骨头</span>
     </div>
   </div>
-  <div id="reciteBtns" style="display:none;margin-top:10px">
-    <div style="text-align:center;font-size:12px;color:#64748b;margin-bottom:6px">记住了吗？</div>
-    <div class="actions">
-      <button class="btn btn-outline" onclick="rateR('hard')" style="color:#dc2626">😣 不熟</button>
-      <button class="btn btn-outline" onclick="rateR('ok')" style="color:#d97706">🤔 还行</button>
-      <button class="btn btn-success" onclick="rateR('easy')">😎 记住了</button>
-    </div>
-  </div>
   <div class="actions">
     <button class="btn btn-outline btn-sm" onclick="navR(-1)">←</button>
     <button class="btn btn-outline btn-sm" onclick="navR(1)">→</button>
@@ -513,6 +505,7 @@ setInterval(function(){
 <div class="panel active" id="panel-progress">
   <!-- 1. 今日计划总览(原冲刺页卡) -->
   <div class="card" style="padding:14px">
+    <div class="stats-bar" id="progressStats" style="margin-bottom:8px"></div>
     <div style="font-size:11px;color:#64748b;text-align:center;margin-bottom:6px">📅 每日计划 · <span id="phaseLabel"></span> · 🔥 <span id="streakLabel"></span></div>
     <div style="display:flex;gap:6px;margin:6px 0">
       <div style="flex:1;text-align:center"><div style="font-size:18px;font-weight:700;color:#475569" id="dpR">0</div><div style="font-size:10px;color:#64748b">背诵</div></div>
@@ -693,7 +686,7 @@ function renderRecite(){
       mb.style.display='block';
     }else{mb.style.display='none';}
   }
-  $('recallBar').style.width=(i+1)/showList.length*100+'%';
+  $('reciteBar').style.width=(i+1)/showList.length*100+'%';
   // 计时开始 + 卡片元信息(历史复习/正确率/学习秒数)
   window.R._startTime = Date.now();
   var prev = window.R.hist[c.id];
@@ -1808,6 +1801,7 @@ function startSimTimer(){
 function updateSimTimer(){var m=Math.floor(simSec/60),s=simSec%60;$('simTimer').textContent=m+':'+(s<10?'0':'')+s;}
 
 function init(){
+  try{
   var d=new Date();
   $('subDate').textContent='截止 2026.08.07 · '+d.toLocaleDateString('zh-CN');
   var dl=new Date(2026,7,7);
@@ -1815,6 +1809,7 @@ function init(){
   $('cdText').textContent+=' · 背诵'+window.DATA.recite.length+'刷题'+window.DATA.quiz.length+'真题'+window.DATA.exam.length;
   renderAll();
   updateDaily();
+  }catch(e){console.error('init异常:',e);}
   // 调试条
   var dbg = document.getElementById('debugStatus');
   if(dbg){
