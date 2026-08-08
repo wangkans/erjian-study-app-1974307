@@ -333,6 +333,7 @@ setInterval(function(){
     <div style="font-size:9px;color:#dc2626;text-align:center" id="timeWarn"></div>
   </div>
   <div class="card" style="text-align:center;min-height:140px">
+    <div id="focusTip" style="display:none;font-size:10px;color:#92400e;background:#fffbeb;border:1px solid #fde68a;border-radius:6px;padding:5px 8px;margin-bottom:8px">📵 把手机放另一房间,关通知——手机在视线内就在消耗你的专注力</div>
     <div style="font-size:11px;color:#94a3b8;margin-bottom:8px">⚡ 冲刺模式 · 5题/轮 · 10秒/题</div>
     <div id="speedTimer" style="font-size:48px;font-weight:900;color:#475569;margin:12px 0;display:none">10</div>
     <div id="speedQText" style="font-size:15px;line-height:1.7;font-weight:500;margin-bottom:12px">点击下方按钮开始</div>
@@ -354,6 +355,7 @@ setInterval(function(){
   <div class="sec-row" id="reciteSec"></div>
   <div style="display:flex;gap:8px;justify-content:flex-end;margin-bottom:4px;font-size:10px">
     <label style="cursor:pointer;color:#64748b"><input type="checkbox" id="chkUnmastered" onchange="toggleUnmastered()"> 未掌握</label>
+    <label style="cursor:pointer;color:#b45309"><input type="checkbox" id="chkHard" onchange="toggleHard()"> ⭐硬骨头</label>
     <label style="cursor:pointer;color:#64748b"><input type="checkbox" id="chkShuffle" checked onchange="toggleShuffle()"> 乱序</label>
     <span onclick="speakCard()" style="cursor:pointer;color:#64748b">🔊</span>
   </div>
@@ -390,6 +392,13 @@ setInterval(function(){
         <button class="btn btn-outline" onclick="rateR('ok')" style="color:#d97706">🤔 部分想起 <small>(6小时后)</small></button>
         <button class="btn btn-success" onclick="rateR('easy')">😎 完全记住 <small>(明天)</small></button>
       </div>
+      <div id="memoBox" style="display:none;margin-top:8px;padding:8px;background:#fefce8;border:1px solid #fde047;border-radius:8px;font-size:11px;line-height:1.7">
+        <div style="font-weight:600;color:#854d0e;margin-bottom:2px">🧠 记忆术·联想钩子</div>
+        <div id="memoText" style="color:#713f12"></div>
+      </div>
+    </div>
+    <div style="margin-top:6px;text-align:right">
+      <span id="hardBtn" onclick="toggleHardCard()" style="cursor:pointer;font-size:11px;color:#b45309;display:none">⭐ 标记为硬骨头</span>
     </div>
   </div>
   <div id="reciteBtns" style="display:none;margin-top:10px">
@@ -410,6 +419,7 @@ setInterval(function(){
 <!-- 刷题 -->
 <div class="panel" id="panel-quiz">
   <div class="stats-bar" id="quizStats"></div>
+  <div id="interleaveTip" style="display:none;font-size:10px;color:#065f46;background:#ecfdf5;border:1px solid #a7f3d0;border-radius:6px;padding:5px 8px;margin-bottom:6px">🔀 交叉学习:每次切tab自动混排各章节题型。练习时正确率下降是正常的(必要难度),考试时反而更稳。</div>
   <div class="sec-row" id="quizSec"></div>
   <div style="margin-bottom:4px"><button class="btn btn-sm btn-outline" onclick="retryWrong('quiz')" style="font-size:10px;padding:3px 8px">🔁 错题重练</button></div>
   <div class="card">
@@ -429,8 +439,8 @@ setInterval(function(){
 <!-- 真题 -->
 <div class="panel" id="panel-exam">
   <div class="stats-bar" id="examStats"></div>
-  <div class="sec-row" id="examSec"></div>
-  <div style="margin-bottom:4px"><button class="btn btn-sm btn-outline" onclick="retryWrong('exam')" style="font-size:10px;padding:3px 8px">🔁 错题重练</button></div>
+  <div id="examInterleaveTip" style="display:none;font-size:10px;color:#065f46;background:#ecfdf5;border:1px solid #a7f3d0;border-radius:6px;padding:5px 8px;margin-bottom:6px">🔀 真题交叉:2021-2026五年真题混排,模拟真实考试"题型混合"。真题做错是最有价值的反馈,把错题收进错题本反复练。</div>
+  <div class="sec-row" id="examSec"></div>  <div style="margin-bottom:4px"><button class="btn btn-sm btn-outline" onclick="retryWrong('exam')" style="font-size:10px;padding:3px 8px">🔁 错题重练</button></div>
   <div class="card">
     <div style="font-size:11px;color:#94a3b8;margin-bottom:6px" id="examLabel">-</div>
     <div style="font-size:14px;line-height:1.7;font-weight:500;margin-bottom:12px" id="examQ">-</div>
@@ -462,6 +472,19 @@ setInterval(function(){
         <div style="font-size:11px;color:#94a3b8;margin-bottom:6px">✅ 勾选答对的得分点：</div>
         <div id="casePoints"></div>
         <div id="caseScore" style="text-align:center;font-size:18px;font-weight:700;margin-top:8px"></div>
+        <div id="whyBox" style="display:none;margin-top:8px;padding:8px;background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;font-size:11px;line-height:1.7">
+          <div style="font-weight:600;color:#075985;margin-bottom:2px">❓ 精细提问 · 加深理解</div>
+          <div style="color:#0c4a6e">问自己:为什么这样做是对的?错的做法会带来什么后果?用自己的话解释一遍——这比再看一遍答案记得牢(自我解释效应)。</div>
+        </div>
+        <div id="caseSelfEval" style="margin-top:10px;display:none">
+          <div style="font-size:11px;color:#64748b;margin-bottom:4px">🔬 认知校准 · 诚实自评(你感觉掌握了多少?)</div>
+          <div class="actions">
+            <button class="btn btn-outline btn-sm" onclick="selfEvalCase('√')" style="color:#059669">√ 完全会</button>
+            <button class="btn btn-outline btn-sm" onclick="selfEvalCase('△')" style="color:#d97706">△ 半懂</button>
+            <button class="btn btn-outline btn-sm" onclick="selfEvalCase('○')" style="color:#dc2626">○ 不会</button>
+          </div>
+          <div style="font-size:10px;color:#94a3b8;margin-top:4px">💡 凭感觉打分往往不准(熟练度错觉):√△○标记用于错题本定位薄弱点</div>
+        </div>
       </div>
     </div>
   </div>
@@ -506,12 +529,26 @@ setInterval(function(){
 
 <div class="panel" id="panel-progress">
   <div class="stats-bar" id="progressStats"></div>
+  <div id="sleepTip" style="display:none;font-size:10px;color:#6d28d9;background:#f5f3ff;border:1px solid #ddd6fe;border-radius:6px;padding:6px 8px;margin-bottom:8px">🌙 睡眠记忆:睡前30分钟背最难的内容,学完就睡——睡眠会帮你把白天学的知识固化成长期记忆(睡前学效果最好)</div>
+  <div class="card">
+    <div style="font-size:12px;font-weight:600;color:#475569;margin-bottom:8px">✅ 今日小目标 · 完成即勾掉(积累成功体验)</div>
+    <div id="miniGoals"></div>
+    <div style="font-size:10px;color:#94a3b8;margin-top:4px">小目标拆解:每次完成一个都算一次"成功体验",自我效能感会越来越强</div>
+  </div>
+  <div class="card">
+    <div style="font-size:12px;font-weight:600;color:#475569;margin-bottom:8px">💭 学习理由 · 倦怠时回看(自我参照)</div>
+    <div id="motiveText" style="font-size:12px;color:#475569;line-height:1.7;white-space:pre-wrap">写下一个"我为什么要考二建"的理由,学不进去时回看这里。</div>
+    <textarea id="motiveInput" style="display:none;width:100%;min-height:60px;border:1px solid #e2e8f0;border-radius:8px;padding:8px;font-size:12px;font-family:inherit;margin-top:6px" placeholder="例如:拿到二建证→岗位晋升/项目挂证/证明自己…"></textarea>
+    <div style="margin-top:6px"><button class="btn btn-sm btn-outline" onclick="toggleMotiveEdit()" id="motiveBtn">✏️ 写理由</button></div>
+    <div style="font-size:10px;color:#94a3b8;margin-top:6px">自我参照效应:与自己相关的信息记得最牢。写下理由=给大脑一个"这与我有关"的信号</div>
+  </div>
   <div class="card">
     <div style="font-size:12px;font-weight:600;color:#475569;margin-bottom:8px">📊 总体进度</div>
     <div class="progress-bar"><div class="progress-fill" id="totalBar" style="width:0%"></div></div>
     <div id="achievements" style="display:flex;flex-wrap:wrap;gap:4px;font-size:18px;margin-top:4px"></div>
   <div id="studyCal" style="display:flex;gap:2px;justify-content:center;flex-wrap:wrap;margin-top:8px"></div>
   <div id="progressSummary" style="font-size:11px;color:#64748b;margin-top:4px"></div>
+  <div style="font-size:10px;color:#94a3b8;margin-top:6px">⚠️ 认知校准:感觉"看懂了"≠"记住了"。熟练度错觉——用错题率和闭卷默写检验真实掌握度,别信流畅感</div>
   </div>
 </div>
 
@@ -543,10 +580,10 @@ function switchTab(name){
   for(var i=0;i<panels.length;i++)panels[i].classList.toggle('active',panels[i].id==='panel-'+name);
   // 切换时调用对应渲染
   if(name==='recite'&&typeof renderRecite==='function')renderRecite();
-  else if(name==='quiz'&&typeof renderQuiz==='function')renderQuiz();
-  else if(name==='exam'&&typeof renderExam==='function')renderExam();
+  else if(name==='quiz'&&typeof renderQuiz==='function'){renderQuiz();var it=$('interleaveTip');if(it)it.style.display='block';}
+  else if(name==='exam'&&typeof renderExam==='function'){renderExam();var it=$('examInterleaveTip');if(it)it.style.display='block';}
   else if(name==='case'&&typeof renderCase==='function')renderCase();
-  else if(name==='progress'&&typeof renderProgress==='function')renderProgress();
+  else if(name==='progress'&&typeof renderProgress==='function'){renderProgress();updateSleepTip();}
 }
 
 // ============ 章节过滤 ============
@@ -624,6 +661,25 @@ function renderRecite(){
   $('recallBox').style.display = 'block';
   $('reciteA').style.display='none';
   $('reciteBtns').style.display='none';
+  // 硬骨头状态
+  var hbBtn=$('hardBtn');
+  if(hbBtn){
+    if(_hardList[c.id]){
+      hbBtn.textContent='⭐ 已标记硬骨头(点击取消)';
+      hbBtn.style.color='#b45309';
+    }else{
+      hbBtn.textContent='⭐ 标记为硬骨头';
+      hbBtn.style.color='#94a3b8';
+    }
+    hbBtn.style.display='block';
+  }
+  var mb=$('memoBox');
+  if(mb){
+    if(_hardList[c.id]){
+      $('memoText').innerHTML=memoHook(c);
+      mb.style.display='block';
+    }else{mb.style.display='none';}
+  }
   $('recallBar').style.width=(i+1)/showList.length*100+'%';
   // 计时开始 + 卡片元信息(历史复习/正确率/学习秒数)
   window.R._startTime = Date.now();
@@ -731,7 +787,9 @@ function submitRecall(){
     window.R._lastRecall = pct;
     recordMatch(matchedWords, missed);  // 关键词高亮
     showAnswer();
-    if(pct >= 90) setTimeout(function(){toast('🎉 太棒了!完全掌握!');}, 600);
+    // 认知校准: 感受与效果往往相反
+    if(pct >= 90){ setTimeout(function(){toast('🎉 太棒了! 注意:感觉"记住了"要用延时测试验证,别信流畅感');}, 600); }
+    else if(pct < 50){ toast('💪 回忆困难=必要难度,记忆正在发生! 这正是有效的信号'); }
   }
 
 function showAnswer(){
@@ -803,6 +861,14 @@ function getNextReview(grade){
   // 困难卡片第一次: 10分钟后; 后续: 按SM-2
   if(grade==='hard' && (!prev || !prev.n)){
     ms = 10 * 60000;
+  }
+  // 滞后效应: 距考试越近, 复习间隔越短(考前密集)
+  // 但保留下限(至少隔2天, 避免每天刷同一张卡导致间隔效应失效)
+  var dl=new Date(2026,7,7);
+  var left=Math.max(1,Math.ceil((dl-now)/86400000));
+  if(left<=14 && r.nextDays>2){
+    var compress=Math.max(2,Math.round(r.nextDays*left/28));
+    if(compress<r.nextDays){ms=compress*86400000;r.nextDays=compress;}
   }
   // 写回 EF/interval/n 状态(累积)
   if(prev){
@@ -1107,6 +1173,8 @@ function renderCase(){
   $('caseAnswerBox').style.display='block';
   $('caseScoreBox').style.display='none';
   $('caseAnswerInput').value='';
+  var wb=$('whyBox');if(wb)wb.style.display='none';
+  var se=$('caseSelfEval');if(se)se.style.display='none';
   $('caseBtn').style.display='';
   $('caseNext').style.display='none';
   $('caseBar').style.width=(i+1)/list.length*100+'%';
@@ -1157,11 +1225,22 @@ function submitCase(){
   h+='<div style="font-size:10px;color:#64748b;margin-top:6px">💡 绿色高亮=系统识别到的，取消勾选=你实际没答到</div>';
   $('casePoints').innerHTML=h;
   $('caseScoreBox').style.display='block';
+  var wb=$('whyBox');if(wb)wb.style.display='block';
+  var se=$('caseSelfEval');if(se)se.style.display='block';
   updateCaseScore();
   
   // 显示自动得分提示
   var pct=Math.round(autoGot/c.points.length*100);
   toast('🤖 自动识别 '+autoGot+'/'+c.points.length+' 个得分点 ('+pct+'%)');
+}
+// √△○ 诚实自评(认知校准): 凭感觉打分往往不准, 标记定位薄弱点
+function selfEvalCase(mark){
+  var c=window.DATA.case[window.C.idx];
+  if(!c)return;
+  if(!window.C.hist[c.id])window.C.hist[c.id]={};
+  window.C.hist[c.id].eval=mark;
+  save();
+  toast('已标记 '+mark+' · 复习时优先看 △ 和 ○');
 }
 function updateCaseScore(){
   var c=window.DATA.case[window.C.idx];
@@ -1191,6 +1270,70 @@ function renderProgress(){
   $('totalBar').style.width=(done/total*100)+'%';
   renderAchieve();renderCal();
   $('progressSummary').textContent='总计完成 '+done+'/'+total+' · 背诵已记'+rD+' · 刷题已答'+qD+' · 真题已答'+eD+' · 案例已做'+cD;
+  renderMiniGoals();
+  renderMotive();
+  updateSleepTip();
+}
+
+// ===== 今日小目标清单(自我效能: 小目标拆解+成功体验) =====
+function renderMiniGoals(){
+  var el=$('miniGoals');if(!el)return;
+  var now=new Date();var dl=new Date(2026,7,7);var left=Math.max(1,Math.ceil((dl-now)/86400000));
+  var todayKey=now.toDateString();
+  var rD=0,qD=0,eD=0;
+  for(var k in window.R.hist){var h=window.R.hist[k];if(h.status==='easy'&&h.time&&new Date(h.time).toDateString()===todayKey)rD++;}
+  for(var k in window.Q.hist){var h=window.Q.hist[k];if(h.time&&new Date(h.time).toDateString()===todayKey)qD++;}
+  for(var k in window.E.hist){var h=window.E.hist[k];if(h.time&&new Date(h.time).toDateString()===todayKey)eD++;}
+  var rT=window.DATA.recite.length,qT=window.DATA.quiz.length,eT=window.DATA.exam.length;
+  var tR=Math.ceil((rT-rD)/left),tQ=Math.ceil((qT-qD)/left),tE=Math.ceil((eT-eD)/left);
+  // 打卡状态存localStorage (每项完成即勾掉)
+  var checks={};try{checks=JSON.parse(localStorage.getItem('miniGoals')||'{}');}catch(err){}
+  var todayKey2=now.toDateString();
+  if(checks.d!==todayKey2)checks={d:todayKey2};
+  function goalItem(id,label,cur,tgt){
+    var done=checks[id]||cur>=tgt;
+    if(cur>=tgt&&!checks[id]){checks[id]=true;try{localStorage.setItem('miniGoals',JSON.stringify(checks));}catch(err){}}
+    var mark=done?'✅':'⬜';
+    return '<label style="display:flex;align-items:center;gap:6px;font-size:12px;color:#475569;padding:4px 0;cursor:pointer"><input type="checkbox" '+(done?'checked':'')+' onchange="toggleMiniGoal(\''+id+'\',this.checked)"> <span>'+mark+' '+label+' <span style="color:#94a3b8;font-size:10px">(今日'+cur+'/'+tgt+')</span></span></label>';
+  }
+  el.innerHTML = goalItem('r','📖 背诵 '+tR+' 条',rD,tR) + goalItem('q','📝 刷题 '+tQ+' 题',qD,tQ) + goalItem('e','📄 真题 '+tE+' 题',eD,tE);
+}
+function toggleMiniGoal(id,checked){
+  var checks={};try{checks=JSON.parse(localStorage.getItem('miniGoals')||'{}');}catch(err){}
+  var now=new Date();var todayKey=now.toDateString();
+  if(checks.d!==todayKey)checks={d:todayKey};
+  if(checked){checks[id]=true;toast('🎉 完成一个目标! 小成功积累大信心');}
+  else delete checks[id];
+  try{localStorage.setItem('miniGoals',JSON.stringify(checks));}catch(err){}
+  renderMiniGoals();
+}
+
+// ===== 学习理由(自我参照: 动机锚) =====
+function renderMotive(){
+  var t=$('motiveText');if(!t)return;
+  var m='';try{m=localStorage.getItem('motive')||'';}catch(err){}
+  t.textContent = m || '写下一个"我为什么要考二建"的理由,学不进去时回看这里。';
+  var b=$('motiveBtn');if(b)b.textContent = m?'✏️ 修改理由':'✏️ 写理由';
+}
+function toggleMotiveEdit(){
+  var inp=$('motiveInput'),t=$('motiveText'),b=$('motiveBtn');
+  if(!inp)return;
+  if(inp.style.display==='none'){
+    var m='';try{m=localStorage.getItem('motive')||'';}catch(err){}
+    inp.value=m;inp.style.display='block';inp.focus();
+    b.textContent='💾 保存';
+  }else{
+    try{localStorage.setItem('motive',inp.value.trim());}catch(err){}
+    inp.style.display='none';renderMotive();toast('💭 理由已保存,倦怠时回看');
+  }
+}
+
+// ===== 睡眠记忆提示(睡前学习效果好) =====
+function updateSleepTip(){
+  var el=$('sleepTip');if(!el)return;
+  var h=new Date().getHours();
+  if(h>=21||h<5){el.style.display='block';}
+  else{el.style.display='none';}
 }
 
 // ============ 渲染全部 ============
@@ -1210,6 +1353,7 @@ function renderAll(){
 // ===== 冲刺模式 =====
 var speedQ=[], speedI=0, speedTimer=null, speedSec=10, speedStreak=0, speedBest=0;
 function startSpeed(){
+  var tip=$('focusTip');if(tip)tip.style.display='block';
   var all=window.DATA.recite.concat(window.DATA.quiz,window.DATA.exam);
   for(var i=all.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=all[i];all[i]=all[j];all[j]=t;}
   speedQ=all.slice(0,5);speedI=0;
@@ -1321,16 +1465,45 @@ var shuffleOn=true, unmasteredOn=false, _shuffleCache=null, _shuffleKey='';
 function toggleShuffle(){shuffleOn=!shuffleOn;$('chkShuffle').checked=shuffleOn;_shuffleCache=null;window.R.idx=0;renderRecite();}
 function toggleUnmastered(){unmasteredOn=!unmasteredOn;$('chkUnmastered').checked=unmasteredOn;_shuffleCache=null;window.R.idx=0;renderRecite();}
 
+// ===== 硬骨头(记忆术:难记内容专用标记) =====
+var hardOn=false, _hardList={};
+try{_hardList=JSON.parse(localStorage.getItem('hardList')||'{}');}catch(e){}
+function toggleHard(){hardOn=!hardOn;$('chkHard').checked=hardOn;_shuffleCache=null;window.R.idx=0;renderRecite();toast(hardOn?'⭐ 只看硬骨头':'⭐ 显示全部');}
+function toggleHardCard(){
+  var c=getList(window.DATA.recite,window.R.sec)[window.R.idx];
+  if(!c)return;
+  if(_hardList[c.id]){delete _hardList[c.id];toast('已取消硬骨头');}
+  else{_hardList[c.id]=true;toast('⭐ 标为硬骨头,点顶部「硬骨头」可只看这些');}
+  try{localStorage.setItem('hardList',JSON.stringify(_hardList));}catch(e){}
+  renderRecite();
+}
+// 记忆钩子:给硬骨头内容一条联想引导(图像转换/故事法)
+function memoHook(c){
+  if(!c)return '';
+  var q=c.q||'', a=c.a||'';
+  var words=a.replace(/[，。、；,.\s、\(\)（）→]+/g,' ').split(' ').filter(function(w){return w.length>=2;});
+  var tips=[];
+  if(words.length>=3){
+    tips.push('🧩 故事法:把「'+words.slice(0,3).join(' → ')+'」串成一个夸张的小故事,画面越离谱记得越牢');
+  }
+  if(words.length>=1){
+    tips.push('🔊 图像法:给「'+words[0]+'」配一个画面感强的谐音或形象');
+  }
+  tips.push('📍 地点法:把这个知识点"放"在房间某个固定位置,回忆时沿路线走一遍');
+  return tips.join('<br>');
+}
+
 // 重写 getList for recite - 默认开启乱序
 var _getListOrig=getList;
 getList=function(data,sec){
   if(data===window.DATA.recite){
     var l=_getListOrig(data,sec);
     if(unmasteredOn) l=l.filter(function(c){var h=window.R.hist[c.id];return !h||h.status!=='easy';});
+    if(hardOn) l=l.filter(function(c){return _hardList[c.id];});
     // 默认开启乱序 (除非用户主动关闭)
     if(typeof shuffleOn==='undefined') shuffleOn=true;
     if(shuffleOn){
-      var key=sec+'|'+(unmasteredOn?'1':'0');
+      var key=sec+'|'+(unmasteredOn?'1':'0')+'|'+(hardOn?'1':'0');
       if(_shuffleCache&&_shuffleKey===key&&_shuffleCache.length===l.length){
         var ids={};for(var i=0;i<l.length;i++)ids[l[i].id]=true;
         var valid=true;
@@ -1383,7 +1556,7 @@ function togglePomo(){
   pomoTimer=setInterval(function(){
     pomoSec--;
     updatePomo();
-    if(pomoSec<=0){stopPomo();toast('🍅 25分钟到!');}
+    if(pomoSec<=0){stopPomo();toast('🍅 25分钟到! 起来快走5-10分钟再继续——运动提升BDNF,记忆效果更好');}
   },1000);
 }
 function stopPomo(){pomoActive=false;if(pomoTimer)clearInterval(pomoTimer);$('pomoBar').style.display='none';$('pomoBtn').style.fontWeight='normal';}
