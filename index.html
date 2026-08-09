@@ -729,6 +729,7 @@ setInterval(function(){
       </span>
     </div>
     <div id="planToday"></div>
+    <div id="aiReviewHistory" style="display:none;margin-top:10px"></div>
     <div style="font-size:10px;color:#94a3b8;margin-top:8px;padding-top:8px;border-top:1px dashed #e2e8f0">
       💡 核心心法: <b style="color:#475569">练时感觉越痛苦(默写不出来)→ 考时越稳</b>。感觉没用的时刻=记忆正在发生
     </div>
@@ -1231,6 +1232,7 @@ function pickQ(j){
   if(!correct)chs[j].classList.add('wrong');
   showExplain(q, j, correct);
   toast(correct?'✅ 正确!':'❌ 错了');
+  aiCheckChapterComplete(key, state.sec);
 }
 
 function showExplain(q, selIdx, correct){
@@ -1371,6 +1373,7 @@ function pickQuizLike(j,key){
   if(!correct)chs[j].classList.add('wrong');
   showExplain(q, j, correct);
   toast(correct?'✅ 正确!':'❌ 错了');
+  aiCheckChapterComplete(key, state.sec);
 }
 function submitMultiLike(key){
   var data=key==='E'?window.DATA.exam:window.DATA.quiz;
@@ -1388,6 +1391,7 @@ function submitMultiLike(key){
   for(var i=0;i<state.sel.length;i++){if(ansArr.indexOf(state.sel[i])<0)chs[state.sel[i]].classList.add('wrong');}
   showExplain(q, state.sel[0]!==undefined?state.sel[0]:-1, correct);
   toast(correct?'✅ 全对!':'❌ 有错误');
+  aiCheckChapterComplete(key, state.sec);
 }
 
 // ============ 案例 ============
@@ -1511,6 +1515,7 @@ function renderProgress(){
   renderMiniGoals();
   renderMotive();
   renderPlanToday();
+  renderAIReviewHistory();
   updateSleepTip();
 }
 
@@ -2134,11 +2139,70 @@ async function aiTest(){
   else $('aiKeyStatus').innerHTML='<span style="color:#dc2626">❌ '+r.err+'</span>';
 }
 // 章复盘/考前冲刺函数预位(后续可挂到完成事件上)
-async function aiReviewChapter(secName){
+async function aiReviewChapter(secName, dataKey, secList){
   if(!hasAIKey())return;
-  var prompt='用户在二建备考中刚完成 1 个章节: '+secName+'。请基于"刚完成+下一步"给出 3 条针对性建议,每条不超过25字,用 ▸ 开头。';
+  // 计算该章节错误率 + 错题数(脱敏)
+  var wrong=0,total=0;
+  for(var i=0;i<secList.length;i++){
+    var h=window[dataKey+'.hist']?window[dataKey+'.hist'][secList[i].id]:null;
+    if(h&&h.time){total++;if(h.wrong)wrong++;}
+  }
+  var wr=total>0?Math.round(wrong/total*100):0;
+  var prompt='用户在二建备考刚完成章节《'+secName+'》('+(dataKey==='E'?'真题':'刷题')+'),共 '+secList.length+' 题,错误率 '+wr+'% ('+wrong+'/'+total+')。\n请基于"错误率+下一步"给出 3 条针对性建议:如果错误率>50%重点指出"重做这章";<30%重点指出"下周该章复习频率";30-50%重点指出"具体薄弱方向"。每条不超过25字,用 ▸ 开头。';
   var r=await aiCall(prompt);
-  if(r.ok){toast('🤖 '+r.text.split('\n')[0]);}
+  if(r.ok){
+    // 把建议显示在 planToday 卡片下方的"AI 复盘"区(持久化,用户可回看)
+    setAIReviewHistory(secName, r.text);
+    toast('🤖 《'+secName+'》已完成,AI 已生成复盘');
+  }else{
+    toast('❌ AI 复盘失败:'+r.err);
+  }
+}
+function getAIReviewHistory(){try{return JSON.parse(localStorage.getItem('aiReview_v1')||'{}');}catch(e){return {};}}
+function setAIReviewHistory(secName, text){
+  var h=getAIReviewHistory();
+  h[secName]={text:text,time:Date.now()};
+  // 只保留最近 20 条
+  var keys=Object.keys(h);
+  if(keys.length>20){keys.sort(function(a,b){return h[a].time-h[b].time;});keys.slice(0,keys.length-20).forEach(function(k){delete h[k];});}
+  try{localStorage.setItem('aiReview_v1',JSON.stringify(h));}catch(e){}
+  renderAIReviewHistory();
+}
+function renderAIReviewHistory(){
+  var el=$('aiReviewHistory');if(!el)return;
+  var h=getAIReviewHistory();
+  var keys=Object.keys(h);
+  if(!keys.length){el.innerHTML='';el.style.display='none';return;}
+  el.style.display='block';
+  keys.sort(function(a,b){return h[b].time-h[a].time;});
+  var html='<div style="font-size:11px;font-weight:600;color:#475569;margin-bottom:6px">🤖 AI 章节复盘(最近)</div>';
+  keys.slice(0,3).forEach(function(k){
+    var item=h[k];
+    var date=new Date(item.time);
+    var datestr=(date.getMonth()+1)+'/'+date.getDate();
+    html+='<div style="background:#f8fafc;border-left:3px solid #34C759;border-radius:6px;padding:6px 8px;margin-bottom:4px;font-size:11px;line-height:1.6">';
+    html+='<div style="font-weight:600;color:#475569;margin-bottom:2px">《'+k+'》 · <span style="color:#94a3b8;font-weight:400">'+datestr+'</span></div>';
+    var lines=item.text.split('\n').filter(function(l){return l.trim();}).slice(0,3);
+    lines.forEach(function(l){html+='<div style="color:#64748b">'+l.replace(/^[▸\-\d\.\s]+/,'')+'</div>';});
+    html+='</div>';
+  });
+  el.innerHTML=html;
+}
+// 章节完成检测(防重复触发): key=Q/E, sec=章节名
+async function aiCheckChapterComplete(dataKey, secName){
+  if(!hasAIKey())return;
+  if(secName==='all'||!secName)return; // "全部"章节不触发
+  var data=dataKey==='E'?window.DATA.exam:window.DATA.quiz;
+  var secList=data.filter(function(q){return q.sec===secName;});
+  if(secList.length<5)return; // 章节题数太少不触发(<5题)
+  // 全部都做过?
+  var allDone=secList.every(function(q){return window[dataKey+'.hist']&&window[dataKey+'.hist'][q.id]&&window[dataKey+'.hist'][q.id].time;});
+  if(!allDone)return;
+  // 防重复:用 localStorage 标记已触发
+  var flagKey='aiReviewed_'+dataKey+'_'+secName;
+  if(localStorage.getItem(flagKey))return;
+  localStorage.setItem(flagKey,'1');
+  await aiReviewChapter(secName, dataKey, secList);
 }
 
 function init(){
