@@ -8,222 +8,423 @@
 <meta name="theme-color" content="#1e293b">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <style>
-*{margin:0;padding:0;box-sizing:border-box}
+/* ==================== iOS 17/18 设计系统 ==================== */
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+
 :root{
-  --c-primary:#475569;
-  --c-success:#10b981;
-  --c-warning:#f59e0b;
-  --c-danger:#ef4444;
-  --c-bg-from:#eef2ff;
-  --c-bg-to:#fef3f2;
-  --c-card:#ffffff;
-  --c-text:#1e293b;
-  --c-text-mute:#64748b;
-  --c-border:#e2e8f0;
-  --shadow-sm:0 1px 2px 0 rgba(0,0,0,0.05);
-  --shadow-md:0 4px 12px -2px rgba(15,23,42,0.06), 0 2px 6px -1px rgba(15,23,42,0.04);
-  --shadow-lg:0 10px 25px -5px rgba(15,23,42,0.08), 0 8px 10px -6px rgba(15,23,42,0.04);
-  --r-sm:8px;
-  --r-md:12px;
-  --r-lg:16px;
-  --r-xl:24px;
+  /* iOS 系统色 */
+  --ios-blue:#007AFF;
+  --ios-green:#34C759;
+  --ios-orange:#FF9500;
+  --ios-red:#FF3B30;
+  --ios-purple:#AF52DE;
+  --ios-yellow:#FFCC00;
+  --ios-pink:#FF2D55;
+  --ios-indigo:#5856D6;
+  --ios-teal:#5AC8FA;
+  --ios-gray:#8E8E93;
+  --ios-gray2:#AEAEB2;
+  --ios-gray3:#C7C7CC;
+  --ios-gray4:#D1D1D6;
+  --ios-gray5:#E5E5EA;
+  --ios-gray6:#F2F2F7;
+
+  /* 文本色(浅色模式) */
+  --label:#000000;
+  --label2:#3C3C43;
+  --label3:#8E8E93;
+
+  /* 背景与分组(浅色) */
+  --bg:#F2F5F9;
+  --bg-grouped:#F2F5F9;
+  --bg-card:rgba(255,255,255,0.72);
+  --bg-fill:rgba(120,120,128,0.12);
+  --bg-fill-2:rgba(120,120,128,0.08);
+  --separator:rgba(60,60,67,0.18);
+
+  /* 圆角 */
+  --r-card:22px;
+  --r-btn:22px;
+  --r-chip:16px;
+  --r-pill:999px;
 }
+
+@media (prefers-color-scheme: dark){
+  :root{
+    --label:#FFFFFF;
+    --label2:#EBEBF5;
+    --label3:#8E8E93;
+    --bg:#000000;
+    --bg-grouped:#000000;
+    --bg-card:rgba(44,44,46,0.72);
+    --bg-fill:rgba(120,120,128,0.24);
+    --bg-fill-2:rgba(120,120,128,0.16);
+    --separator:rgba(84,84,88,0.45);
+  }
+}
+
 body{
-  font-family:-apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif;
-  background:linear-gradient(135deg,var(--c-bg-from) 0%,var(--c-bg-to) 100%);
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text","PingFang SC","Helvetica Neue",sans-serif;
+  background:linear-gradient(180deg,#F2F5F9 0%,#FFFFFF 100%);
   background-attachment:fixed;
-  color:var(--c-text);
+  color:var(--label);
   min-height:100vh;
   padding-bottom:80px;
   -webkit-font-smoothing:antialiased;
+  letter-spacing:-0.01em;
+  font-feature-settings:"ss01","cv11";
 }
+@media (prefers-color-scheme: dark){
+  body{background:#000000;}
+}
+
+/* ============ 顶部导航: iOS Large Title ============ */
 .header{
-  background:linear-gradient(135deg,#1e293b 0%,#334155 100%);
-  color:#f1f5f9;
-  padding:12px 16px 10px;
+  background:rgba(255,255,255,0.65);
+  -webkit-backdrop-filter:saturate(180%) blur(25px);
+  backdrop-filter:saturate(180%) blur(25px);
+  color:var(--label);
+  padding:14px 20px 12px;
   position:sticky;top:0;z-index:100;
-  box-shadow:var(--shadow-md);
+  border-bottom:0.5px solid var(--separator);
 }
-.header h1{font-size:16px;font-weight:600;letter-spacing:0.3px}
-.header .sub{font-size:11px;opacity:.75;margin-top:2px}
+.header h1{
+  font-size:34px;
+  font-weight:700;
+  letter-spacing:0.37px;
+  line-height:1.2;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.header h1 .header-actions{display:flex;gap:8px}
+.header h1 .header-actions span{
+  width:34px;height:34px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:18px;cursor:pointer;
+  border-radius:50%;
+  background:var(--bg-fill);
+  transition:transform .12s ease, background .12s ease;
+}
+.header h1 .header-actions span:active{transform:scale(0.92);background:var(--bg-fill-2)}
+.header .sub{font-size:13px;color:var(--label3);margin-top:4px;font-weight:400}
 .header .cd{
-  font-size:10px;opacity:.9;margin-top:3px;
-  background:rgba(255,255,255,.12);
-  backdrop-filter:blur(10px);
-  display:inline-block;padding:2px 9px;border-radius:20px;
-  border:1px solid rgba(255,255,255,.15);
+  font-size:12px;color:var(--label2);
+  margin-top:6px;display:inline-block;
+  padding:3px 10px;
+  background:var(--bg-fill);
+  border-radius:var(--r-pill);
+  font-weight:500;
 }
+
+/* ============ Tab栏: iOS Segmented 风格 ============ */
 .tabs{
   display:flex;
-  background:rgba(255,255,255,0.92);
-  backdrop-filter:blur(20px);
-  -webkit-backdrop-filter:blur(20px);
-  border-bottom:1px solid var(--c-border);
-  position:sticky;top:48px;z-index:99;
+  background:rgba(255,255,255,0.85);
+  -webkit-backdrop-filter:saturate(180%) blur(25px);
+  backdrop-filter:saturate(180%) blur(25px);
+  border-bottom:0.5px solid var(--separator);
+  position:sticky;top:80px;z-index:99;
   overflow-x:auto;
-  padding:2px 6px;
+  padding:6px 12px 8px;
+  gap:2px;
 }
 .tab{
   flex:1;text-align:center;
   padding:8px 4px 6px;
   font-size:11px;font-weight:500;
-  color:#94a3b8;
-  border-bottom:2px solid transparent;
+  color:var(--label3);
   cursor:pointer;
   min-width:46px;
-  transition:color .15s ease, border-color .15s ease;
+  border-radius:var(--r-chip);
+  transition:color .15s ease, background .15s ease;
 }
+.tab:active{background:var(--bg-fill-2);transform:scale(0.96)}
 .tab.active{
-  color:#059669;
-  border-bottom-color:#059669;
+  color:var(--ios-blue);
   font-weight:600;
+  background:rgba(0,122,255,0.08);
 }
-.tab .em{font-size:16px;display:block;margin-bottom:2px}
-.panel{display:none;padding:12px 14px;max-width:640px;margin:0 auto;animation:fadeIn .3s ease}
+.tab .em{font-size:18px;display:block;margin-bottom:2px}
+
+/* ============ 面板 + 分组卡片 ============ */
+.panel{
+  display:none;
+  padding:16px 20px;
+  max-width:640px;margin:0 auto;
+  animation:fadeIn .25s ease;
+}
 @keyframes fadeIn{
-  from{opacity:0;transform:translateY(8px)}
+  from{opacity:0;transform:translateY(6px)}
   to{opacity:1;transform:translateY(0)}
 }
 .panel.active{display:block}
+
+/* ============ 卡片: iOS 毛玻璃 ============ */
 .card{
-  background:var(--c-card);
-  border-radius:var(--r-md);
-  border:1px solid var(--c-border);
-  padding:14px;margin-bottom:10px;
-  box-shadow:var(--shadow-sm);
+  background:var(--bg-card);
+  -webkit-backdrop-filter:saturate(180%) blur(25px);
+  backdrop-filter:saturate(180%) blur(25px);
+  border-radius:var(--r-card);
+  border:0.5px solid rgba(255,255,255,0.8);
+  padding:16px;
+  margin-bottom:16px;
+  box-shadow:0 8px 30px rgba(0,0,0,0.06);
 }
-.card:hover{box-shadow:var(--shadow-md)}
-.tag{display:inline-block;font-size:9px;background:#f1f5f9;color:#64748b;padding:2px 6px;border-radius:4px}
-.choices{margin-top:12px;display:flex;flex-direction:column;gap:6px}
+@media (prefers-color-scheme: dark){
+  .card{border:0.5px solid rgba(255,255,255,0.08);}
+}
+.tag{
+  display:inline-block;font-size:11px;
+  background:var(--bg-fill);color:var(--label2);
+  padding:3px 8px;border-radius:var(--r-pill);font-weight:500;
+}
+
+/* ============ 选项: iOS 列表 ============ */
+.choices{margin-top:12px;display:flex;flex-direction:column;gap:8px}
 .choice{
-  padding:12px 14px;
-  border:1.5px solid var(--c-border);
-  border-radius:var(--r-md);
-  font-size:13px;line-height:1.5;
-  cursor:pointer;background:#fff;color:#475569;
-  transition:all .15s ease;
-  margin-bottom:4px;
+  padding:14px 16px;
+  border:0.5px solid var(--separator);
+  border-radius:var(--r-card);
+  font-size:15px;line-height:1.4;
+  cursor:pointer;
+  background:var(--bg-card);
+  -webkit-backdrop-filter:blur(20px);
+  backdrop-filter:blur(20px);
+  color:var(--label);
+  transition:transform .15s ease, background .15s ease, border-color .15s ease;
+  font-weight:400;
+  letter-spacing:-0.01em;
 }
-.choice:hover{border-color:#94a3b8;background:#f8fafc}
-.choice.sel{border-color:#475569;background:#f1f5f9;font-weight:500}
-.choice.correct{border-color:#10b981;background:#d1fae5;color:#065f46;font-weight:500}
-.choice.wrong{border-color:#ef4444;background:#fee2e2;color:#991b1b}
-.choice.reveal-correct{border-color:#10b981;background:#d1fae5;color:#065f46;font-weight:500}
+.choice:active{transform:scale(0.98);background:var(--bg-fill-2)}
+.choice.sel{
+  border-color:var(--ios-blue);
+  background:rgba(0,122,255,0.08);
+  color:var(--ios-blue);
+  font-weight:500;
+}
+.choice.correct{
+  border-color:var(--ios-green);
+  background:rgba(52,199,89,0.12);
+  color:#1D7E33;
+  font-weight:500;
+}
+.choice.wrong{
+  border-color:var(--ios-red);
+  background:rgba(255,59,48,0.10);
+  color:#D70015;
+}
+.choice.reveal-correct{
+  border-color:var(--ios-green);
+  background:rgba(52,199,89,0.12);
+  color:#1D7E33;
+  font-weight:500;
+}
+@media (prefers-color-scheme: dark){
+  .choice.correct{color:#6FE89A}
+  .choice.wrong{color:#FF7B7B}
+}
 .choice .pre{
-  font-weight:700;margin-right:8px;
-  display:inline-block;
+  font-weight:600;margin-right:10px;
+  display:inline-flex;align-items:center;justify-content:center;
   width:24px;height:24px;
-  background:#f1f5f9;border-radius:50%;
-  text-align:center;line-height:24px;
-  color:#475569;font-size:11px;
+  background:var(--bg-fill);
+  border-radius:50%;
+  color:var(--label2);
+  font-size:12px;
 }
-.actions{display:flex;gap:5px;margin-top:12px;flex-wrap:wrap}
+
+/* ============ 操作按钮组 ============ */
+.actions{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
 .btn{
   flex:1;min-width:65px;
-  padding:9px 12px;border:none;
-  border-radius:var(--r-md);
-  font-size:12px;font-weight:600;
+  padding:12px 14px;border:none;
+  border-radius:var(--r-btn);
+  font-size:15px;font-weight:600;
   cursor:pointer;text-align:center;
-  min-height:38px;
-  transition:transform .12s ease, box-shadow .12s ease;
-  letter-spacing:0.2px;
+  min-height:44px;
+  transition:transform .15s ease, box-shadow .15s ease, background .15s ease;
+  letter-spacing:-0.01em;
+  font-family:inherit;
 }
-.btn:active{transform:scale(0.98)}
+.btn:active{transform:scale(0.96)}
 .btn-primary{
-  background:linear-gradient(135deg,#475569 0%,#334155 100%);
+  background:var(--ios-blue);
   color:#fff;
-  box-shadow:0 2px 6px rgba(71,85,105,0.3);
+  box-shadow:0 4px 14px rgba(0,122,255,0.30);
 }
-.btn-primary:hover{box-shadow:0 4px 10px rgba(71,85,105,0.4);transform:translateY(-1px)}
 .btn-success{
-  background:linear-gradient(135deg,#10b981 0%,#059669 100%);
+  background:var(--ios-green);
   color:#fff;
-  box-shadow:0 2px 6px rgba(16,185,129,0.3);
+  box-shadow:0 4px 14px rgba(52,199,89,0.30);
 }
-.btn-success:hover{transform:translateY(-1px)}
 .btn-danger{
-  background:linear-gradient(135deg,#ef4444 0%,#dc2626 100%);
+  background:var(--ios-red);
   color:#fff;
-  box-shadow:0 2px 6px rgba(239,68,68,0.3);
+  box-shadow:0 4px 14px rgba(255,59,48,0.30);
 }
 .btn-outline{
-  background:#fff;
-  border:1px solid var(--c-border);
-  color:#475569;
+  background:var(--bg-fill);
+  color:var(--ios-blue);
+  font-weight:500;
 }
-.btn-outline:hover{background:#f8fafc;border-color:#94a3b8}
-.btn-sm{padding:7px 10px;font-size:10px;min-height:32px;flex:0 0 auto}
+.btn-outline:active{background:var(--bg-fill-2)}
+.btn-sm{padding:8px 12px;font-size:13px;min-height:34px;flex:0 0 auto;border-radius:18px}
 .btn-block{width:100%;flex:none}
-.stats-bar{display:flex;gap:5px;margin-bottom:8px}
+
+/* ============ 统计卡: iOS 圆角分组 ============ */
+.stats-bar{display:flex;gap:10px;margin-bottom:12px}
 .stat-card{
   flex:1;
-  background:var(--c-card);
-  border-radius:var(--r-md);
-  border:1px solid var(--c-border);
-  padding:8px 4px;text-align:center;
+  background:var(--bg-card);
+  -webkit-backdrop-filter:blur(20px);
+  backdrop-filter:blur(20px);
+  border:0.5px solid rgba(255,255,255,0.8);
+  border-radius:var(--r-card);
+  padding:12px 6px;text-align:center;
+  box-shadow:0 6px 24px rgba(0,0,0,0.05);
 }
-.stat-card .num{font-size:15px;font-weight:700;color:#475569}
-.stat-card .num.good{color:#059669}
-.stat-card .num.bad{color:#dc2626}
-.stat-card .lbl{font-size:9px;color:#94a3b8;margin-top:1px}
-.sec-row{display:flex;gap:4px;overflow-x:auto;padding:0 0 4px;margin-bottom:4px}
+@media (prefers-color-scheme: dark){
+  .stat-card{border:0.5px solid rgba(255,255,255,0.08);}
+}
+.stat-card .num{font-size:24px;font-weight:700;color:var(--label);letter-spacing:-0.02em;line-height:1.1}
+.stat-card .num.good{color:var(--ios-green)}
+.stat-card .num.bad{color:var(--ios-red)}
+.stat-card .num.orange{color:var(--ios-orange)}
+.stat-card .lbl{font-size:11px;color:var(--label3);margin-top:4px;font-weight:500}
+
+/* ============ 章节胶囊: iOS Chip ============ */
+.sec-row{display:flex;gap:8px;overflow-x:auto;padding:0 0 4px;margin-bottom:12px;-webkit-overflow-scrolling:touch}
 .sec-btn{
   flex-shrink:0;
-  padding:5px 12px;
-  border:1px solid var(--c-border);
-  border-radius:20px;
-  font-size:10px;cursor:pointer;
+  padding:7px 14px;
+  border:0.5px solid var(--separator);
+  border-radius:var(--r-pill);
+  font-size:13px;cursor:pointer;
   white-space:nowrap;
-  background:#fff;color:#64748b;
-  transition:all .15s ease;
+  background:var(--bg-fill);
+  color:var(--label2);
+  transition:transform .12s ease, background .12s ease, color .12s ease;
+  font-weight:500;
 }
-.sec-btn:hover{border-color:#94a3b8}
+.sec-btn:active{transform:scale(0.96)}
 .sec-btn.active{
-  background:linear-gradient(135deg,#475569 0%,#334155 100%);
+  background:var(--ios-blue);
   color:#fff;border-color:transparent;
   font-weight:600;
-  box-shadow:0 2px 6px rgba(71,85,105,0.25);
+  box-shadow:0 4px 12px rgba(0,122,255,0.25);
 }
-.progress-bar{height:5px;background:rgba(0,0,0,0.05);border-radius:3px;margin:6px 0;overflow:hidden}
-.progress-fill{height:100%;transition:width .4s ease;background:linear-gradient(90deg,#10b981,#059669);border-radius:3px}
+
+/* ============ 进度条: 胶囊式 ============ */
+.progress-bar{
+  height:6px;
+  background:var(--bg-fill);
+  border-radius:var(--r-pill);
+  margin:8px 0;
+  overflow:hidden;
+}
+.progress-fill{
+  height:100%;
+  transition:width .4s ease;
+  background:var(--ios-green);
+  border-radius:var(--r-pill);
+}
+
+/* ============ Toast: 毛玻璃胶囊 ============ */
 .toast{
-  position:fixed;bottom:100px;
+  position:fixed;bottom:90px;
   left:50%;transform:translateX(-50%);
-  background:rgba(15,23,42,.95);
-  backdrop-filter:blur(10px);
-  color:#f1f5f9;
-  padding:10px 20px;
-  border-radius:24px;
-  font-size:12px;font-weight:500;
+  background:rgba(28,28,30,0.78);
+  -webkit-backdrop-filter:saturate(180%) blur(25px);
+  backdrop-filter:saturate(180%) blur(25px);
+  color:#FFFFFF;
+  padding:11px 22px;
+  border-radius:var(--r-pill);
+  font-size:14px;font-weight:500;
   z-index:999;display:none;
-  max-width:90%;
-  box-shadow:var(--shadow-lg);
-  animation:toastIn .3s ease;
+  max-width:88%;
+  box-shadow:0 10px 30px rgba(0,0,0,0.18);
+  animation:toastIn .25s ease;
 }
 @keyframes toastIn{
   from{opacity:0;transform:translate(-50%,10px)}
   to{opacity:1;transform:translate(-50%,0)}
 }
-.tip{font-size:10px;color:#d97706;background:#fffbeb;padding:5px 8px;border-radius:6px;margin-top:6px}
 
-body.dark{background:#0f172a;color:#cbd5e1}
-body.dark .header{background:#020617}
-body.dark .tabs{background:#1e293b;border-color:#334155}
-body.dark .tab{color:#64748b}
-body.dark .tab.active{color:#94a3b8;border-color:#64748b}
-body.dark .card{background:#1e293b;border-color:#334155;color:#cbd5e1}
-body.dark .stat-card{background:#1e293b;border-color:#334155}
-body.dark .choice{background:#1e293b;border-color:#334155;color:#cbd5e1}
-body.dark .choice.sel{background:#1e3a5f;border-color:#64748b}
-body.dark .choice.correct{background:#064e3b;border-color:#059669}
-body.dark .choice.wrong{background:#450a0a;border-color:#dc2626}
-body.dark .sec-btn{background:#1e293b;border-color:#334155;color:#94a3b8}
-body.dark .sec-btn.active{background:#64748b;color:#f1f5f9}
-body.dark .tag{background:#1e3a5f;color:#94a3b8}
-body.dark .toast{background:rgba(241,245,249,.9);color:#1e293b}
-body.dark .tip{background:#1c1917;color:#fbbf24}
-body.dark .btn-outline{background:#1e293b;border-color:#334155;color:#cbd5e1}
+/* ============ 提示框: iOS inset grouped ============ */
+.tip{
+  font-size:13px;color:var(--ios-orange);
+  background:rgba(255,149,0,0.10);
+  padding:8px 12px;border-radius:12px;
+  margin-top:8px;line-height:1.5;
+}
 
+/* ============ iOS 风格复选框替换 ============ */
+input[type="checkbox"]{
+  -webkit-appearance:none;
+  appearance:none;
+  width:20px;height:20px;
+  border-radius:50%;
+  border:1.5px solid var(--ios-gray3);
+  background:var(--bg-card);
+  cursor:pointer;
+  position:relative;
+  vertical-align:middle;
+  transition:background .15s ease, border-color .15s ease;
+  margin-right:6px;
+  flex-shrink:0;
+}
+input[type="checkbox"]:checked{
+  background:var(--ios-blue);
+  border-color:var(--ios-blue);
+}
+input[type="checkbox"]:checked::after{
+  content:"";position:absolute;
+  left:5px;top:1.5px;
+  width:5px;height:10px;
+  border:solid #fff;
+  border-width:0 2px 2px 0;
+  transform:rotate(45deg);
+}
+
+/* ============ 用户手动 dark 模式(覆盖系统) ============ */
+body.dark{background:#000000}
+body.dark .header{
+  background:rgba(0,0,0,0.72);
+  border-bottom:0.5px solid rgba(84,84,88,0.45);
+}
+body.dark .tabs{
+  background:rgba(0,0,0,0.72);
+  border-bottom:0.5px solid rgba(84,84,88,0.45);
+}
+body.dark .card{
+  background:rgba(44,44,46,0.72);
+  border:0.5px solid rgba(255,255,255,0.08);
+}
+body.dark .stat-card{
+  background:rgba(44,44,46,0.72);
+  border:0.5px solid rgba(255,255,255,0.08);
+}
+body.dark .choice{
+  background:rgba(44,44,46,0.72);
+  border:0.5px solid rgba(84,84,88,0.45);
+  color:#FFFFFF;
+}
+body.dark .choice.sel{background:rgba(0,122,255,0.18);border-color:var(--ios-blue);color:var(--ios-blue)}
+body.dark .choice.correct{background:rgba(52,199,89,0.18);border-color:var(--ios-green)}
+body.dark .choice.wrong{background:rgba(255,59,48,0.18);border-color:var(--ios-red)}
+body.dark .choice .pre{background:rgba(118,118,128,0.24);color:#EBEBF5}
+body.dark .sec-btn{background:rgba(118,118,128,0.16);color:#EBEBF5;border-color:rgba(84,84,88,0.45)}
+body.dark .sec-btn.active{background:var(--ios-blue)}
+body.dark .tab{color:#8E8E93}
+body.dark .tab.active{background:rgba(0,122,255,0.18);color:var(--ios-blue)}
+body.dark .tag{background:rgba(118,118,128,0.24);color:#EBEBF5}
+body.dark .btn-outline{background:rgba(118,118,128,0.16);color:var(--ios-blue)}
+body.dark .tip{background:rgba(255,149,0,0.18);color:#FFB340}
+body.dark .progress-bar{background:rgba(118,118,128,0.24)}
+
+/* 深色毛玻璃 header 文字保持白 */
+body.dark .header{color:#FFFFFF}
+body.dark .header .sub{color:#8E8E93}
+body.dark .header .cd{background:rgba(118,118,128,0.24);color:#EBEBF5}
 </style>
 </head>
 <body>
@@ -293,7 +494,7 @@ setInterval(function(){
 </div>
 
 <div class="header">
-  <h1>📚 二建备考题库 <span style="float:right;display:flex;gap:6px"><span onclick="togglePomo()" id="pomoBtn" style="cursor:pointer;font-size:14px">🍅</span><span onclick="toggleDark()" id="darkBtn" style="cursor:pointer;font-size:14px">🌙</span></span></h1>
+  <h1>二建备考<span class="header-actions"><span onclick="toggleSearch()" title="搜索">🔍</span><span onclick="togglePomo()" id="pomoBtn" title="番茄钟">🍅</span><span onclick="toggleDark()" id="darkBtn" title="深色模式">🌙</span></span></h1>
   <div class="sub" id="subDate">加载中...</div>
   <div class="cd" id="cdText">⏳ 加载中</div>
 </div>
@@ -308,9 +509,9 @@ setInterval(function(){
   <div class="tab" data-tab="exam_sim" onclick="switchTab('exam_sim')"><span class="em">🎯</span>模考</div>
   <div class="tab" data-tab="speed" onclick="switchTab('speed')"><span class="em">⚡</span>冲刺</div>
 </div>
-<div id="searchBar" style="display:none;padding:6px 12px;background:#fff;border-bottom:1px solid #e2e8f0">
-  <div style="display:flex;gap:4px"><input id="searchInput" placeholder="搜索知识点..." style="flex:1;padding:6px 10px;border:1px solid #e2e8f0;border-radius:6px;font-size:12px;outline:none" oninput="doSearch()"><button class="btn btn-sm btn-outline" onclick="closeSearch()">✕</button></div>
-  <div id="searchResults" style="max-height:240px;overflow-y:auto;font-size:11px;margin-top:4px"></div>
+<div id="searchBar" style="display:none;padding:10px 16px;background:rgba(255,255,255,0.85);-webkit-backdrop-filter:blur(25px);backdrop-filter:blur(25px);border-bottom:0.5px solid var(--separator)">
+  <div style="display:flex;gap:8px"><input id="searchInput" placeholder="搜索知识点..." style="flex:1;padding:10px 14px;border:none;background:var(--bg-fill);border-radius:var(--r-pill);font-size:15px;outline:none;font-family:inherit" oninput="doSearch()"><button class="btn btn-sm btn-outline" onclick="closeSearch()" style="padding:8px 14px;border-radius:var(--r-pill);font-size:14px">取消</button></div>
+  <div id="searchResults" style="max-height:280px;overflow-y:auto;font-size:14px;margin-top:10px"></div>
 </div>
 
 <!-- 背诵 -->
@@ -1497,7 +1698,7 @@ function doSearch(){
   if(!r.length){$('searchResults').innerHTML='<div style="color:#94a3b8;text-align:center;padding:8px">未找到</div>';return;}
   var h='';
   for(var i=0;i<Math.min(r.length,15);i++){
-    h+='<div style="padding:4px 0;border-bottom:1px solid #f1f5f9;cursor:pointer" onclick="goResult("'+r[i].t+'","'+r[i].id+'")"><span style="font-size:9px;background:#f1f5f9;padding:1px 4px;border-radius:2px;margin-right:3px">'+r[i].t+'</span><span style="font-size:9px;color:#94a3b8">'+r[i].s+'</span><br>'+r[i].q.substring(0,70)+'</div>';
+    h+='<div style="padding:10px 0;border-bottom:0.5px solid var(--separator);cursor:pointer;color:var(--label)" onclick="goResult("'+r[i].t+'","'+r[i].id+'")"><span style="font-size:11px;background:var(--bg-fill);color:var(--label2);padding:2px 8px;border-radius:var(--r-pill);margin-right:6px;font-weight:500">'+r[i].t+'</span><span style="font-size:12px;color:var(--label3)">'+r[i].s+'</span><div style="margin-top:4px;font-size:14px">'+r[i].q.substring(0,70)+'</div></div>';
   }
   $('searchResults').innerHTML=h;
 }
@@ -1715,7 +1916,7 @@ function renderCal(){
   var dn=['日','一','二','三','四','五','六'];
   for(var i=6;i>=0;i--){
     var d=new Date(today);d.setDate(d.getDate()-i);var ds=d.toDateString();
-    var m=map[ds]||0;var c=m===0?'#f1f5f9':(m<30?'#c6f6d5':(m<60?'#68d391':'#059669'));
+    var m=map[ds]||0;var c=m===0?'var(--bg-fill)':(m<30?'#E8F5E9':(m<60?'#34C759':'#28A745'));
     h+='<div style="text-align:center;width:30px"><div style="font-size:8px;color:#94a3b8">'+dn[d.getDay()]+'</div><div style="width:26px;height:26px;border-radius:4px;background:'+c+';margin:1px auto;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:600;color:'+(m>30?'#fff':'#64748b')+'">'+d.getDate()+'</div></div>';
   }
   $('studyCal').innerHTML=h;
