@@ -722,8 +722,11 @@ setInterval(function(){
   <!-- 2. 今日怎么学(方法论核心卡片) -->
   <div class="card" style="padding:14px">
     <div style="font-size:12px;font-weight:600;color:#475569;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center">
-      <span>🎯 今日怎么学</span>
-      <span style="font-size:10px;color:#94a3b8;font-weight:400">基于《上瘾式学习》</span>
+      <span>� 今日怎么学</span>
+      <span style="display:flex;gap:6px;align-items:center">
+        <span id="aiBadge" style="font-size:9px;padding:2px 7px;border-radius:10px;background:#f1f5f9;color:#64748b">🤖 本地</span>
+        <span id="aiRefresh" onclick="aiRefreshPlan()" style="font-size:10px;color:#007AFF;cursor:pointer;font-weight:500">🔄 AI重排</span>
+      </span>
     </div>
     <div id="planToday"></div>
     <div style="font-size:10px;color:#94a3b8;margin-top:8px;padding-top:8px;border-top:1px dashed #e2e8f0">
@@ -757,6 +760,34 @@ setInterval(function(){
 
   <!-- 6. 睡眠提示 -->
   <div id="sleepTip" style="display:none;font-size:11px;color:#6d28d9;background:#f5f3ff;border:1px solid #ddd6fe;border-radius:8px;padding:10px 12px;margin-top:8px">🌙 睡前30分钟背最难的内容,学完就睡——睡眠会帮你把白天学的知识固化成长期记忆</div>
+
+  <!-- 7. AI 学习教练(可折叠) -->
+  <div class="card" style="padding:14px;margin-top:10px">
+    <div onclick="toggleAISettings()" style="font-size:12px;font-weight:600;color:#475569;cursor:pointer;display:flex;justify-content:space-between;align-items:center">
+      <span>🤖 AI 学习教练<span id="aiStatusDot" style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#94a3b8;margin-left:6px;vertical-align:middle"></span></span>
+      <span id="aiToggleIcon" style="font-size:11px;color:#94a3b8">▼</span>
+    </div>
+    <div id="aiSettings" style="display:none;margin-top:10px">
+      <div style="font-size:11px;color:#64748b;line-height:1.6;margin-bottom:8px">
+        接入 DeepSeek 大模型,基于今日进度+薄弱点生成个性化学习计划。<b style="color:#007AFF">离线/失败自动降级为本地规则</b>,无需 Key 也可使用。
+      </div>
+      <div style="font-size:11px;color:#94a3b8;margin-bottom:6px">
+        API Key(在 <a href="https://platform.deepseek.com" target="_blank" style="color:#007AFF">platform.deepseek.com</a> 注册,首次送 ¥5 额度):
+      </div>
+      <div style="display:flex;gap:6px">
+        <input id="aiKeyInput" type="password" placeholder="sk-xxxxxxxxxxxxxxxx" style="flex:1;padding:8px 10px;border:0.5px solid rgba(0,0,0,0.1);border-radius:10px;font-size:11px;font-family:monospace;outline:none;background:rgba(255,255,255,0.6);backdrop-filter:blur(10px)" />
+        <button class="btn btn-primary btn-sm" onclick="saveAIKey()" style="flex:0 0 auto">保存</button>
+      </div>
+      <div id="aiKeyStatus" style="font-size:10px;margin-top:6px;color:#64748b"></div>
+      <div style="font-size:10px;color:#94a3b8;margin-top:8px;padding-top:8px;border-top:1px dashed #e2e8f0">
+        💡 调用时机:每天早计划(进入进度页时)+完成1章后(可选复盘)+考前14天每日冲刺。<b style="color:#059669">每月成本 < ¥5</b>
+      </div>
+      <div style="margin-top:8px;display:flex;gap:6px">
+        <button class="btn btn-outline btn-sm" onclick="aiTest()" style="flex:1">🧪 测试连接</button>
+        <button class="btn btn-outline btn-sm" onclick="aiClearKey()" style="flex:0 0 auto;color:#dc2626">清除</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -790,7 +821,7 @@ function switchTab(name){
   else if(name==='quiz'&&typeof renderQuiz==='function'){renderQuiz();var it=$('interleaveTip');if(it)it.style.display='block';}
   else if(name==='exam'&&typeof renderExam==='function'){renderExam();var it=$('examInterleaveTip');if(it)it.style.display='block';}
   else if(name==='case'&&typeof renderCase==='function')renderCase();
-  else if(name==='progress'&&typeof renderProgress==='function'){renderProgress();updateSleepTip();}
+  else if(name==='progress'&&typeof renderProgress==='function'){renderProgress();updateSleepTip();if(typeof aiAutoOnLoad==='function')aiAutoOnLoad();}
 }
 
 // ============ 章节过滤 ============
@@ -1485,6 +1516,9 @@ function renderProgress(){
 
 // ===== 今日怎么学(方法论核心卡片:按skill推导的每日任务清单) =====
 function renderPlanToday(){
+  // 优先读今日 AI 缓存
+  var cache=getAICache&&getAICache();
+  if(cache){renderPlanTodayWith(cache);return;}
   var el=$('planToday');if(!el)return;
   var now=new Date();
   var hour=now.getHours();
@@ -2000,6 +2034,112 @@ function startSimTimer(){
   simTimer=setInterval(function(){simSec--;updateSimTimer();if(simSec<=0)simSubmit();},1000);
 }
 function updateSimTimer(){var m=Math.floor(simSec/60),s=simSec%60;$('simTimer').textContent=m+':'+(s<10?'0':'')+s;}
+
+// ============ AI 学习教练 (DeepSeek) ============
+// 设计:用户自填 Key 存 localStorage;离线/失败/无Key自动降级本地规则;每日早/章复盘/考日前14天 触发
+var AI_KEY='aiKey_v1', AI_CACHE='aiCache_v1', AI_CFG='aiCfg_v1';
+var SYS_PROMPT='你是一位严厉但循循善诱的二建备考教练。基于用户今日学习进度、薄弱点、距考试天数,给出3-5条今日任务建议。每条不超过25字,口语化、可执行。不要寒暄,直说做什么。';
+function getAIKey(){try{return localStorage.getItem(AI_KEY)||'';}catch(e){return '';}}
+function hasAIKey(){return !!getAIKey();}
+function saveAIKey(){
+  var v=$('aiKeyInput').value.trim();
+  if(!v||v.indexOf('sk-')!==0){$('aiKeyStatus').innerHTML='<span style="color:#dc2626">❌ Key格式错,应以 sk- 开头</span>';return;}
+  try{localStorage.setItem(AI_KEY,v);$('aiKeyInput').value='';renderAIStatus();$('aiKeyStatus').innerHTML='<span style="color:#059669">✅ 已保存 · Key仅存在你本机</span>';}catch(e){$('aiKeyStatus').innerHTML='<span style="color:#dc2626">❌ 保存失败:'+e.message+'</span>';}
+}
+function aiClearKey(){try{localStorage.removeItem(AI_KEY);localStorage.removeItem(AI_CACHE);renderAIStatus();$('aiKeyStatus').innerHTML='<span style="color:#64748b">已清除</span>';}catch(e){}}
+function renderAIStatus(){
+  var ok=hasAIKey(),d=$('aiStatusDot'),b=$('aiBadge');
+  if(ok){d.style.background='#34C759';b.innerHTML='🤖 AI';b.style.background='#dcfce7';b.style.color='#059669';}
+  else{d.style.background='#94a3b8';b.innerHTML='🤖 本地';b.style.background='#f1f5f9';b.style.color='#64748b';}
+  var v=$('aiKeyInput');if(v&&!v.value)v.placeholder=ok?'已配置('+getAIKey().slice(0,7)+'...)':'sk-xxxxxxxxxxxxxxxx';
+}
+function toggleAISettings(){var el=$('aiSettings');var ic=$('aiToggleIcon');if(el.style.display==='none'){el.style.display='block';ic.textContent='▲';renderAIStatus();}else{el.style.display='none';ic.textContent='▼';}}
+function getAICache(){try{var c=JSON.parse(localStorage.getItem(AI_CACHE)||'{}');var d=new Date();d.setHours(0,0,0,0);if(c.date!==d.getTime())return null;return c.data||null;}catch(e){return null;}}
+function setAICache(data){try{var d=new Date();d.setHours(0,0,0,0);localStorage.setItem(AI_CACHE,JSON.stringify({date:d.getTime(),data:data}));}catch(e){}}
+function aiBuildPrompt(){
+  // 收集今日进度统计
+  var rD=window.R.hist?Object.keys(window.R.hist).length:0, qD=Object.keys(window.Q.hist||{}).length, eD=Object.keys(window.E.hist||{}).length, cD=Object.keys(window.C.hist||{}).length;
+  var totalR=window.DATA.recite.length, totalQ=window.DATA.quiz.length, totalE=window.DATA.exam.length, totalC=(window.DATA.case||[]).length;
+  var today=new Date();var exam=new Date(2026,7,7);var left=Math.ceil((exam-today)/86400000);
+  // 错题率
+  var wrongR=0,totalRR=0;Object.keys(window.R.hist).forEach(function(k){var h=window.R.hist[k];if(h.last&&h.last.grade){totalRR++;if(h.last.grade==='hard')wrongR++;}});
+  var wr=totalRR>0?Math.round(wrongR/totalRR*100):0;
+  var nowH=today.getHours();
+  var period=nowH<11?'早间':(nowH<14?'午间':(nowH<18?'下午':(nowH<22?'晚间':'睡前')));
+  return '用户状态:\n'+
+    '- 距考试 '+left+' 天(2026.08.07)\n'+
+    '- 当前时段:'+period+'\n'+
+    '- 今日已完成:背诵 '+rD+'/'+totalR+',刷题 '+qD+'/'+totalQ+',真题 '+eD+'/'+totalE+',案例 '+cD+'/'+totalC+'\n'+
+    '- 背诵硬骨头率:'+wr+'%\n'+
+    '- 整体进度:'+Math.round((rD+qD+eD+cD)/(totalR+totalQ+totalE+totalC)*100)+'%\n\n'+
+    '请基于以上数据,给出今日3-5条具体任务建议。每条用 ▸ 开头,不超过25字。';
+}
+async function aiCall(prompt){
+  var key=getAIKey();
+  if(!key)return{err:'no_key'};
+  var ctrl=new AbortController();
+  var tm=setTimeout(function(){ctrl.abort();},15000);
+  try{
+    var res=await fetch('https://api.deepseek.com/v1/chat/completions',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
+      body:JSON.stringify({model:'deepseek-chat',messages:[{role:'system',content:SYS_PROMPT},{role:'user',content:prompt}],max_tokens:400,temperature:0.7,stream:false}),
+      signal:ctrl.signal
+    });
+    clearTimeout(tm);
+    if(!res.ok){var t=await res.text();return{err:'HTTP '+res.status+': '+t.slice(0,80)};}
+    var data=await res.json();
+    return{ok:1,text:data.choices[0].message.content};
+  }catch(e){clearTimeout(tm);return{err:e.name==='AbortError'?'请求超时(15s)':e.message};}
+}
+async function aiRefreshPlan(){
+  if(!hasAIKey()){toast('�️ 请先在 AI 教练卡里填 API Key');$('aiSettings').style.display='block';$('aiToggleIcon').textContent='▲';return;}
+  var prompt=aiBuildPrompt();
+  $('aiBadge').innerHTML='🤖 生成中…';$('aiBadge').style.background='#fef3c7';$('aiBadge').style.color='#d97706';
+  var r=await aiCall(prompt);
+  if(r.ok){
+    setAICache(r.text);
+    renderPlanTodayWith(r.text);
+    $('aiBadge').innerHTML='🤖 AI';$('aiBadge').style.background='#dcfce7';$('aiBadge').style.color='#059669';
+    toast('✅ AI 已重新规划今日任务');
+  }else{
+    $('aiBadge').innerHTML='🤖 离线';$('aiBadge').style.background='#fee2e2';$('aiBadge').style.color='#dc2626';
+    toast('❌ AI 失败:'+r.err+' · 已用本地规则');
+  }
+}
+function renderPlanTodayWith(aiText){
+  var el=$('planToday');if(!el)return;
+  if(!aiText){renderPlanToday();return;}
+  var lines=aiText.split('\n').filter(function(l){return l.trim();});
+  var h='<div style="font-size:11px;color:#059669;margin-bottom:4px">🤖 AI 个性化建议(基于你的进度)</div>';
+  lines.forEach(function(l){
+    if(l.indexOf('▸')===0||l.indexOf('-')===0||/^\d/.test(l.trim())){
+      h+='<div style="font-size:12px;line-height:1.7;padding:3px 0;color:#1e293b">'+l.replace(/^[▸\-\d\.\s]+/,'')+'</div>';
+    }
+  });
+  el.innerHTML=h;
+}
+async function aiAutoOnLoad(){
+  // 进度页首次打开时,如今天还没 AI 计划且有 Key → 自动调用一次
+  if(!hasAIKey())return;
+  var c=getAICache();
+  if(c){renderPlanTodayWith(c);return;}
+  aiRefreshPlan();
+}
+async function aiTest(){
+  if(!hasAIKey()){$('aiKeyStatus').innerHTML='<span style="color:#dc2626">❌ 请先填 Key</span>';return;}
+  $('aiKeyStatus').innerHTML='<span style="color:#d97706">� 测试中…</span>';
+  var r=await aiCall('请回复:测试成功');
+  if(r.ok)$('aiKeyStatus').innerHTML='<span style="color:#059669">✅ 连接成功! DeepSeek 已响应</span>';
+  else $('aiKeyStatus').innerHTML='<span style="color:#dc2626">❌ '+r.err+'</span>';
+}
+// 章复盘/考前冲刺函数预位(后续可挂到完成事件上)
+async function aiReviewChapter(secName){
+  if(!hasAIKey())return;
+  var prompt='用户在二建备考中刚完成 1 个章节: '+secName+'。请基于"刚完成+下一步"给出 3 条针对性建议,每条不超过25字,用 ▸ 开头。';
+  var r=await aiCall(prompt);
+  if(r.ok){toast('🤖 '+r.text.split('\n')[0]);}
+}
 
 function init(){
   try{
