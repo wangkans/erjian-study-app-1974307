@@ -543,13 +543,23 @@ input[type="text"],input[type="password"],input[type="search"]{
 
 <!-- 强制诊断条: 永远显示,不依赖任何JS -->
 <div id="diag" style="position:fixed;top:0;left:0;right:0;z-index:99999;background:#fbbf24;color:#000;padding:6px 10px;font-size:11px;font-family:monospace;border-bottom:2px solid #dc2626;display:flex;justify-content:space-between;align-items:center">
-  <span>📊 <span id="diag-data">加载中...</span></span>
+  <span>📊 v20260809-3 · <span id="diag-data">加载中...</span></span>
   <span>
     <a href="javascript:clearAll()" style="color:#dc2626;font-weight:700;text-decoration:underline;margin-right:8px">🗑️清缓存</a>
     <a href="javascript:location.reload(true)" style="color:#1e293b;font-weight:700;text-decoration:underline">🔄刷新</a>
   </span>
 </div>
 <div style="height:32px"></div>
+
+<script>
+// 全局错误兜底
+window.onerror = function(msg, url, line, col, err){
+  var bar = document.getElementById("debugBar");
+  if(bar){bar.style.display="block";bar.innerHTML="⚠️ 运行错误 line "+line+": "+ (msg||"").slice(0,60) +" <span onclick=\"location.reload()\" style=\"cursor:pointer;text-decoration:underline\">🔄 强制刷新</span>";}
+  return true;
+};
+window.addEventListener("unhandledrejection", function(e){var b=document.getElementById("debugBar");if(b){b.style.display="block";b.innerHTML="⚠️ 异步错误 <span onclick=\"location.reload()\" style=\"cursor:pointer;text-decoration:underline\">🔄 刷新</span>";}});
+</script>
 
 <script>
 // 立刻执行, 不等任何东西
@@ -1067,7 +1077,8 @@ function renderRecite(){
   metaDiv.className = 'recite-meta';
   metaDiv.innerHTML = meta;
   var qEl = $('reciteQ');
-  qEl.parentNode.insertBefore(metaDiv, qEl);
+  if(qEl && qEl.parentNode) qEl.parentNode.insertBefore(metaDiv, qEl);
+  else { var rc=$('reciteCard'); if(rc) rc.insertBefore(metaDiv, rc.firstChild); }
 
   // 启动5秒倒计时 — 期间提示按钮disabled, 倒计时归零后启用
   var timerEl = $('recallTimer');
@@ -1376,7 +1387,7 @@ function showExplain(q, selIdx, correct){
   }
   var ansText = Array.isArray(q.answer) ? q.answer.map(function(i){return 'ABCDE'[i];}).join(',') : 'ABCDE'[q.answer];
   var selText = 'ABCDE'[selIdx];
-  var expl = q.explain || '本题考查水利工程施工相关知识。建议回顾相关章节。';
+  var expl = q.analysis || q.explain || '本题考查水利工程施工相关知识。建议回顾相关章节。';
   exp.innerHTML = 
     '<div style="display:flex;justify-content:space-between;margin-bottom:4px"><b style="color:'+(correct?'#059669':'#dc2626')+'">'+(correct?'✅ 答对了':'❌ 答错了')+'</b><span style="color:#94a3b8;font-size:11px">正确答案: <b style="color:#475569">'+ansText+'</b></span></div>'+
     '<div style="color:#475569;font-size:11px;margin-bottom:4px">你选了: <b>'+selText+'</b></div>'+
