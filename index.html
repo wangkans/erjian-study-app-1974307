@@ -543,7 +543,7 @@ input[type="text"],input[type="password"],input[type="search"]{
 
 <!-- 强制诊断条: 永远显示,不依赖任何JS -->
 <div id="diag" style="position:fixed;top:0;left:0;right:0;z-index:99999;background:#fbbf24;color:#000;padding:6px 10px;font-size:11px;font-family:monospace;border-bottom:2px solid #dc2626;display:flex;justify-content:space-between;align-items:center">
-  <span>📊 v20260809-6 · <span id="diag-data">加载中...</span></span>
+  <span>📊 v20260809-7 · <span id="diag-data">加载中...</span></span>
   <span>
     <a href="javascript:clearAll()" style="color:#dc2626;font-weight:700;text-decoration:underline;margin-right:8px">🗑️清缓存</a>
     <a href="javascript:location.reload(true)" style="color:#1e293b;font-weight:700;text-decoration:underline">🔄刷新</a>
@@ -934,6 +934,9 @@ window.C = {idx:0, hist:{}};  // case
 // 加载进度
 try{var s=JSON.parse(localStorage.getItem(window.DB));
 if(s){window.R=s.R||window.R;window.Q=s.Q||window.Q;window.E=s.E||window.E;window.C=s.C||window.C;}}catch(e){}
+// 安全防护: 错题重练('__wrong__')状态不能持久化——题库更新后索引会失效导致启动崩溃, 一律复位
+if(window.Q.sec==='__wrong__'){window.Q.sec=window.Q._orig||'all';delete window.Q._orig;delete window.Q._wrongIdx;window.Q.idx=0;}
+if(window.E.sec==='__wrong__'){window.E.sec=window.E._orig||'all';delete window.E._orig;delete window.E._wrongIdx;window.E.idx=0;}
 function save(){try{localStorage.setItem(window.DB,JSON.stringify({R:window.R,Q:window.Q,E:window.E,C:window.C}))}catch(e){}}
 
 // ============ 工具 ============
@@ -971,7 +974,9 @@ function renderSec(panelId, data, stateKey){
   for(var i=0;i<secs.length;i++){
     var s=secs[i];
     var cnt=s==='all'?data.length:data.filter(function(d){return d.sec===s;}).length;
-    h+='<div class="sec-btn'+(curr===s?' active':'')+'" onclick="setSec(\''+stateKey+'\',\''+s+'\')">'+(s==='all'?'全部':s)+' '+cnt+'</div>';
+    // 章节名转义防注入(未来导入的题可能含引号)
+    var safeS=String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/"/g,'&quot;');
+    h+='<div class="sec-btn'+(curr===s?' active':'')+'" onclick="setSec(\''+stateKey+'\',\''+safeS+'\')">'+(s==='all'?'全部':s)+' '+cnt+'</div>';
   }
   el.innerHTML=h;
 }
@@ -1365,7 +1370,7 @@ function pickQ(j){
   if(!correct)chs[j].classList.add('wrong');
   showExplain(q, j, correct);
   toast(correct?'✅ 正确!':'❌ 错了');
-  aiCheckChapterComplete(key, state.sec);
+  aiCheckChapterComplete('Q', window.Q.sec);
 }
 
 function showExplain(q, selIdx, correct){
@@ -1389,7 +1394,8 @@ function submitMulti(){
   var q=getList(window.DATA.quiz,window.Q.sec)[window.Q.idx];
   // q.answer 可能是数字或数组，统一转为数组
   var ansArr = Array.isArray(q.answer) ? q.answer : [q.answer];
-  var correct=ansArr.join(',')===window.Q.sel.sort().join(',');
+  // 注意: 用副本排序, 不能 sort() 原始数据/用户选区(会原地修改共享引用)
+  var correct=ansArr.slice().sort().join(',')===window.Q.sel.slice().sort().join(',');
   window.Q.hist[q.id]={time:Date.now(),wrong:correct?0:1};
   save();
   updateDaily();
@@ -1516,7 +1522,7 @@ function submitMultiLike(key){
   var q=getList(data,state.sec)[state.idx];
   // q.answer 可能是数字或数组，统一转为数组
   var ansArr = Array.isArray(q.answer) ? q.answer : [q.answer];
-  var correct=ansArr.sort().join(',')===state.sel.sort().join(',');
+  var correct=ansArr.slice().sort().join(',')===state.sel.slice().sort().join(',');
   state.hist[q.id]={time:Date.now(),wrong:correct?0:1};
   save();
   updateDaily();
@@ -1713,7 +1719,7 @@ function renderPlanToday(){
 }
 function renderMiniGoals(){
   var el=$('miniGoals');if(!el)return;
-  var now=new Date();var dl=new Date(2026,7,7);var left=Math.max(1,Math.ceil((dl-now)/86400000));
+  var now=new Date();var dl=new Date(2026,8,12);var left=Math.max(1,Math.ceil((dl-now)/86400000));
   var todayKey=now.toDateString();
   var rD=0,qD=0,eD=0;
   for(var k in window.R.hist){var h=window.R.hist[k];if(h.status==='easy'&&h.time&&new Date(h.time).toDateString()===todayKey)rD++;}
@@ -2001,8 +2007,8 @@ function updatePomo(){var m=Math.floor(pomoSec/60),s=pomoSec%60;$('pomoTime').te
 // ===== 每日计划 =====
 function updateDaily(){
   if(!window.DATA||!window.DATA.recite) return;
-  var today=new Date();var dl=new Date(2026,7,7);var left=Math.max(1,Math.ceil((dl-today)/86400000));
-  var passed=13-left;var phase=passed<7?'背诵阶段':'真题冲刺';
+  var today=new Date();var dl=new Date(2026,8,12);var left=Math.max(1,Math.ceil((dl-today)/86400000));
+  var phase=left>14?'背诵阶段':'真题冲刺';
   $('phaseLabel').textContent=phase;
   
   // 今日答题数: 按今日时间过滤
@@ -2167,7 +2173,7 @@ function simSubmit(){
   for(var i=0;i<simQ.length;i++){
     var q=simQ[i],a=simA[i];
     if(q.choices){
-      if(Array.isArray(q.answer)){if(a&&q.answer.sort().join(',')===a.sort().join(','))correct++;}
+      if(Array.isArray(q.answer)){if(a&&q.answer.slice().sort().join(',')===a.slice().sort().join(','))correct++;}
       else{if(a===q.answer)correct++;}
     }
   }
@@ -2205,14 +2211,14 @@ function aiBuildPrompt(){
   // 收集今日进度统计
   var rD=window.R.hist?Object.keys(window.R.hist).length:0, qD=Object.keys(window.Q.hist||{}).length, eD=Object.keys(window.E.hist||{}).length, cD=Object.keys(window.C.hist||{}).length;
   var totalR=window.DATA.recite.length, totalQ=window.DATA.quiz.length, totalE=window.DATA.exam.length, totalC=(window.DATA.case||[]).length;
-  var today=new Date();var exam=new Date(2026,7,7);var left=Math.ceil((exam-today)/86400000);
+  var today=new Date();var exam=new Date(2026,8,12);var left=Math.ceil((exam-today)/86400000);
   // 错题率
   var wrongR=0,totalRR=0;Object.keys(window.R.hist).forEach(function(k){var h=window.R.hist[k];if(h.last&&h.last.grade){totalRR++;if(h.last.grade==='hard')wrongR++;}});
   var wr=totalRR>0?Math.round(wrongR/totalRR*100):0;
   var nowH=today.getHours();
   var period=nowH<11?'早间':(nowH<14?'午间':(nowH<18?'下午':(nowH<22?'晚间':'睡前')));
   return '用户状态:\n'+
-    '- 距考试 '+left+' 天(2026.08.07)\n'+
+    '- 距考试 '+left+' 天(2026.09.12)\n'+
     '- 当前时段:'+period+'\n'+
     '- 今日已完成:背诵 '+rD+'/'+totalR+',刷题 '+qD+'/'+totalQ+',真题 '+eD+'/'+totalE+',案例 '+cD+'/'+totalC+'\n'+
     '- 背诵硬骨头率:'+wr+'%\n'+
@@ -2335,8 +2341,9 @@ async function aiCheckChapterComplete(dataKey, secName){
   var data=dataKey==='E'?window.DATA.exam:window.DATA.quiz;
   var secList=data.filter(function(q){return q.sec===secName;});
   if(secList.length<5)return; // 章节题数太少不触发(<5题)
-  // 全部都做过?
-  var allDone=secList.every(function(q){return window[dataKey+'.hist']&&window[dataKey+'.hist'][q.id]&&window[dataKey+'.hist'][q.id].time;});
+  // 全部都做过? (dataKey: 'Q'->window.Q.hist, 'E'->window.E.hist)
+  var histObj = dataKey==='E' ? window.E.hist : window.Q.hist;
+  var allDone = secList.every(function(q){return histObj && histObj[q.id] && histObj[q.id].time;});
   if(!allDone)return;
   // 防重复:用 localStorage 标记已触发
   var flagKey='aiReviewed_'+dataKey+'_'+secName;
@@ -2350,7 +2357,7 @@ function init(){
   try{window.R.idx=Math.min(window.R.idx||0,window.DATA.recite.length-1);window.Q.idx=0;window.E.idx=0;}catch(e2){}
   var d=new Date();
   $('subDate').textContent='一建考试 2026.09.12 · '+d.toLocaleDateString('zh-CN');
-  var dl=new Date(2026,7,7);
+  var dl=new Date(2026,8,12);
   $('cdText').textContent='⏳ 还剩 '+Math.ceil((dl-d)/86400000)+' 天';
   $('cdText').textContent+=' · 背诵'+window.DATA.recite.length+'刷题'+window.DATA.quiz.length+'真题'+window.DATA.exam.length;
   renderAll();
@@ -2395,7 +2402,7 @@ window.G=null;
 var G_LEVELS=[[0,'🌱学徒'],[100,'📘入门'],[300,'✏️熟手'],[600,'🔥高手'],[1000,'⭐大师'],[1500,'👑考神'],[2200,'🏆传说'],[3000,'💎无双']];
 function gToday(){return new Date().toDateString();}
 function gLoad(){try{window.G=JSON.parse(localStorage.getItem(window.GKEY));}catch(e){window.G=null;}
-  if(!window.G||typeof window.G.xp!=='number')window.G={xp:0,streak:0,best:0,shield:0,bossWins:0,boxDone:false,_bossWas:-1,daily:{date:gToday(),r:0,q:0,w:0}};
+  if(!window.G||typeof window.G.xp!=='number'||isNaN(window.G.xp))window.G={xp:0,streak:0,best:0,shield:0,bossWins:0,boxDone:false,_bossWas:-1,daily:{date:gToday(),r:0,q:0,w:0}};
   if(!window.G.daily||window.G.daily.date!==gToday()){window.G.daily={date:gToday(),r:0,q:0,w:0};window.G.boxDone=false;}
   gSave();}
 function gSave(){try{localStorage.setItem(window.GKEY,JSON.stringify(window.G));}catch(e){}}
